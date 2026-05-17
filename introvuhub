@@ -1,0 +1,115 @@
+--// BOBACONHUB | PRO VIP-STYLE INTRO
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+pcall(function()
+    PlayerGui:FindFirstChild("BobaconIntro"):Destroy()
+end)
+
+-- GUI
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "BobaconIntro"
+gui.ResetOnSpawn = false
+
+local bg = Instance.new("Frame", gui)
+bg.Size = UDim2.new(1,0,1,0)
+
+-- Gradient Sky
+local grad = Instance.new("UIGradient", bg)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,225,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(60,140,255))
+}
+grad.Rotation = 90
+
+-- Logo
+local logo = Instance.new("TextLabel", bg)
+logo.AnchorPoint = Vector2.new(0.5,0.5)
+logo.Position = UDim2.new(0.5,0,0.40,0)
+logo.Size = UDim2.new(0,0,0,0)
+logo.BackgroundTransparency = 1
+logo.Text = "vu2k12"
+logo.Font = Enum.Font.GothamBlack
+logo.TextSize = 52
+logo.TextColor3 = Color3.new(1,1,1)
+logo.TextStrokeTransparency = 0.4
+logo.TextTransparency = 1
+
+-- ADMIN
+local admin = Instance.new("TextLabel", bg)
+admin.Size = UDim2.new(1,0,0.1,0)
+admin.Position = UDim2.new(0,0,0.50,0)
+admin.BackgroundTransparency = 1
+admin.Text = "hub"
+admin.Font = Enum.Font.GothamBold
+admin.TextSize = 22
+admin.TextColor3 = Color3.fromRGB(235,245,255)
+admin.TextTransparency = 1
+
+-- Loading
+local loading = Instance.new("TextLabel", bg)
+loading.Size = UDim2.new(1,0,0.1,0)
+loading.Position = UDim2.new(0,0,0.60,0)
+loading.BackgroundTransparency = 1
+loading.Font = Enum.Font.Gotham
+loading.TextSize = 18
+loading.TextColor3 = Color3.fromRGB(240,250,255)
+loading.TextTransparency = 1
+loading.Text = "Loading"
+
+-- Sound
+local sound = Instance.new("Sound", SoundService)
+sound.SoundId = "rbxassetid://9118828566"
+sound.Volume = 2
+sound:Play()
+
+-- Tween logo scale + fade
+TweenService:Create(logo, TweenInfo.new(1.2, Enum.EasingStyle.Back), {
+    Size = UDim2.new(0,420,0,70),
+    TextTransparency = 0
+}):Play()
+
+TweenService:Create(admin, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(loading, TweenInfo.new(1.2), {TextTransparency = 0}):Play()
+
+-- Gradient animation
+task.spawn(function()
+    while gui.Parent do
+        grad.Rotation += 0.4
+        task.wait(0.03)
+    end
+end)
+
+-- Loading dots animation
+task.spawn(function()
+    local dots = {".","..","..."}
+    local i = 1
+    while gui.Parent do
+        loading.Text = "Loading"..dots[i]
+        i = i % #dots + 1
+        task.wait(0.5)
+    end
+end)
+
+-- Hold
+task.wait(3.5)
+
+-- Fade out all
+TweenService:Create(bg, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+TweenService:Create(logo, TweenInfo.new(1), {TextTransparency = 1}):Play()
+TweenService:Create(admin, TweenInfo.new(1), {TextTransparency = 1}):Play()
+TweenService:Create(loading, TweenInfo.new(1), {TextTransparency = 1}):Play()
+TweenService:Create(sound, TweenInfo.new(1), {Volume = 0}):Play()
+
+task.wait(1.2)
+gui:Destroy()
+
+-- LOAD ADMIN SCRIPT
+loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/vu2k1200-maker/vu2k12hub/refs/heads/main/vuhub"
+))()
