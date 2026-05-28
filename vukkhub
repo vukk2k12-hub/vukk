@@ -163,16 +163,33 @@ end)
 
 -------------------------------------------------
 -- TAB VISION
-local function applyHitboxReal(p, teamCheck)
-    if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-        if teamCheck and p.Team == player.Team then return end
 
-        local hrp = p.Character.HumanoidRootPart
-        hrp.Size = Vector3.new(settings.HitboxSize, settings.HitboxSize, settings.HitboxSize)
-        hrp.Transparency = settings.HitboxTransparency
-        hrp.Material = Enum.Material.Neon
-        hrp.Color = Color3.fromRGB(135,206,235)
+-- Dictionary lưu các hitbox của player
+local playerHitboxes = {}
+local playerTeams = {} -- Lưu team hiện tại của mỗi player
+
+local function shouldTargetPlayer(p, teamCheck)
+    if p == player then return false end
+    if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return false end
+    
+    if teamCheck then
+        return p.Team ~= player.Team
     end
+    return true
+end
+
+local function applyHitboxReal(p, teamCheck)
+    if not shouldTargetPlayer(p, teamCheck) then return end
+
+    local hrp = p.Character.HumanoidRootPart
+    hrp.Size = Vector3.new(settings.HitboxSize, settings.HitboxSize, settings.HitboxSize)
+    hrp.Transparency = settings.HitboxTransparency
+    hrp.Material = Enum.Material.Neon
+    hrp.Color = Color3.fromRGB(135,206,235)
+    
+    -- Lưu vào dictionary
+    playerHitboxes[p.UserId] = hrp
+    playerTeams[p.UserId] = p.Team
 end
 
 local function resetHitboxReal(p)
@@ -181,15 +198,30 @@ local function resetHitboxReal(p)
         hrp.Size = Vector3.new(2,2,1)
         hrp.Transparency = 1
     end
+    playerHitboxes[p.UserId] = nil
+    playerTeams[p.UserId] = nil
 end
+
+-- Update hitbox properties realtime (Size, Transparency)
+rs.RenderStepped:Connect(function()
+    for userId, hrp in pairs(playerHitboxes) do
+        if hrp and hrp.Parent then
+            hrp.Size = Vector3.new(settings.HitboxSize, settings.HitboxSize, settings.HitboxSize)
+            hrp.Transparency = settings.HitboxTransparency
+        else
+            playerHitboxes[userId] = nil
+            playerTeams[userId] = nil
+        end
+    end
+end)
 
 local function getHealthColor(hp)
     if hp >= 80 then
-        return Color3.fromRGB(0, 255, 0) -- Xanh lá
+        return Color3.fromRGB(0, 255, 0)
     elseif hp > 30 then
-        return Color3.fromRGB(255, 255, 0) -- Vàng
+        return Color3.fromRGB(255, 255, 0)
     else
-        return Color3.fromRGB(255, 0, 0) -- Đỏ
+        return Color3.fromRGB(255, 0, 0)
     end
 end
 
@@ -199,23 +231,20 @@ local function createHealthBar(p)
     local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
     
-    -- BillboardGui container - TO, NHÌN ĐƯỢC TỪ RẤT XA
     local billboardGui = Instance.new("BillboardGui")
     billboardGui.Name = "BaconHealthBar"
-    billboardGui.Size = UDim2.new(8, 0, 1, 0)  -- TO HƠN
+    billboardGui.Size = UDim2.new(8, 0, 1, 0)
     billboardGui.StudsOffset = Vector3.new(0, 5, 0)
-    billboardGui.MaxDistance = math.huge  -- NHÌN TỪ RẤT XA
+    billboardGui.MaxDistance = math.huge
     billboardGui.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
     billboardGui.Parent = p.Character
     
-    -- Khung chứa bảng máu
     local container = Instance.new("Frame", billboardGui)
     container.Size = UDim2.new(1, 0, 1, 0)
     container.BackgroundTransparency = 0.3
     container.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Instance.new("UICorner", container).CornerRadius = UDim.new(0, 6)
     
-    -- Thanh máu (CHỈ CÓ BẢNG, KHÔNG CÓ SỐ)
     local healthBar = Instance.new("Frame", container)
     healthBar.Name = "HealthBar"
     healthBar.Size = UDim2.new(1, -4, 1, -4)
@@ -223,7 +252,6 @@ local function createHealthBar(p)
     healthBar.BackgroundColor3 = getHealthColor(humanoid.Health)
     Instance.new("UICorner", healthBar).CornerRadius = UDim.new(0, 4)
     
-    -- Update máu real-time
     local function updateHealth(newHealth)
         local maxHealth = humanoid.MaxHealth
         local ratio = math.max(0, math.min(1, newHealth / maxHealth))
@@ -235,9 +263,8 @@ local function createHealthBar(p)
     updateHealth(humanoid.Health)
     humanoid.HealthChanged:Connect(updateHealth)
     
-    -- Xóa khi enemy chết
     humanoid.Died:Connect(function()
-        billboardGui:Destroy()
+        if billboardGui then billboardGui:Destroy() end
     end)
 end
 
@@ -248,22 +275,20 @@ local function removeHealthBar(p)
 end
 
 local function applyESP(p, teamCheck)
-    if p ~= player and p.Character then
-        if teamCheck and p.Team == player.Team then return end
-        if not p.Character:FindFirstChild("BaconESP") then
-            local hl = Instance.new("Highlight")
-            hl.Name = "BaconESP"
-            hl.FillTransparency = 1
-            hl.OutlineTransparency = 0
-            hl.OutlineColor = Color3.fromRGB(135,206,235)
-            hl.Adornee = p.Character
-            hl.Parent = p.Character
-        end
-        
-        -- Tạo health bar nếu bật
-        if settings.HealthDisplay then
-            createHealthBar(p)
-        end
+    if not shouldTargetPlayer(p, teamCheck) then return end
+    
+    if not p.Character:FindFirstChild("BaconESP") then
+        local hl = Instance.new("Highlight")
+        hl.Name = "BaconESP"
+        hl.FillTransparency = 1
+        hl.OutlineTransparency = 0
+        hl.OutlineColor = Color3.fromRGB(135,206,235)
+        hl.Adornee = p.Character
+        hl.Parent = p.Character
+    end
+    
+    if settings.HealthDisplay then
+        createHealthBar(p)
     end
 end
 
@@ -274,29 +299,105 @@ local function resetESP(p)
     removeHealthBar(p)
 end
 
--- Biến theo dõi người chơi
-local trackedPlayers = {}
-
--- Track player join
-game.Players.PlayerAdded:Connect(function(p)
-    if not trackedPlayers[p.UserId] then
-        trackedPlayers[p.UserId] = true
-        
-        p.CharacterAdded:Connect(function(char)
-            wait(0.1)
-            if settings.HitboxAll or settings.HitboxTeam then
-                applyHitboxReal(p, settings.HitboxTeam)
+-- Monitor team changes - update ngay lập tức khi player đổi team
+game.Players:GetPropertyChangedSignal("Teams"):Connect(function()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player then
+            local newTeam = p.Team
+            local oldTeam = playerTeams[p.UserId]
+            
+            if newTeam ~= oldTeam then
+                playerTeams[p.UserId] = newTeam
+                
+                -- Update hitbox khi đổi team
+                if settings.HitboxTeam then
+                    if shouldTargetPlayer(p, true) then
+                        applyHitboxReal(p, true)
+                    else
+                        resetHitboxReal(p)
+                    end
+                end
+                
+                -- Update ESP khi đổi team
+                if settings.ESPTeam then
+                    if shouldTargetPlayer(p, true) then
+                        applyESP(p, true)
+                    else
+                        resetESP(p)
+                    end
+                end
             end
-            if settings.ESPAll or settings.ESPTeam then
-                applyESP(p, settings.ESPTeam)
+        end
+    end
+end)
+
+-- Monitor team changes cho từng player
+for _, p in pairs(game.Players:GetPlayers()) do
+    if p ~= player then
+        p:GetPropertyChangedSignal("Team"):Connect(function()
+            local newTeam = p.Team
+            local oldTeam = playerTeams[p.UserId]
+            
+            if newTeam ~= oldTeam then
+                playerTeams[p.UserId] = newTeam
+                
+                -- Update hitbox ngay lập tức
+                if settings.HitboxTeam then
+                    if shouldTargetPlayer(p, true) then
+                        applyHitboxReal(p, true)
+                    else
+                        resetHitboxReal(p)
+                    end
+                end
+                
+                -- Update ESP ngay lập tức
+                if settings.ESPTeam then
+                    if shouldTargetPlayer(p, true) then
+                        applyESP(p, true)
+                    else
+                        resetESP(p)
+                    end
+                end
             end
         end)
     end
+end
+
+-- Track player join
+game.Players.PlayerAdded:Connect(function(p)
+    playerTeams[p.UserId] = p.Team
+    
+    -- Monitor team changes cho player mới
+    p:GetPropertyChangedSignal("Team"):Connect(function()
+        local newTeam = p.Team
+        local oldTeam = playerTeams[p.UserId]
+        
+        if newTeam ~= oldTeam then
+            playerTeams[p.UserId] = newTeam
+            
+            if settings.HitboxTeam then
+                if shouldTargetPlayer(p, true) then
+                    applyHitboxReal(p, true)
+                else
+                    resetHitboxReal(p)
+                end
+            end
+            
+            if settings.ESPTeam then
+                if shouldTargetPlayer(p, true) then
+                    applyESP(p, true)
+                else
+                    resetESP(p)
+                end
+            end
+        end
+    end)
 end)
 
 -- Track player leave
 game.Players.PlayerRemoving:Connect(function(p)
-    trackedPlayers[p.UserId] = nil
+    playerHitboxes[p.UserId] = nil
+    playerTeams[p.UserId] = nil
 end)
 
 createToggleButton(Tabs["Vision"],"Hitbox All",20,"HitboxAll",function() end)
@@ -304,18 +405,17 @@ createToggleButton(Tabs["Vision"],"Hitbox Team",70,"HitboxTeam",function() end)
 createToggleButton(Tabs["Vision"],"ESP All",120,"ESPAll",function() end)
 createToggleButton(Tabs["Vision"],"ESP Team",170,"ESPTeam",function() end)
 
--- Cập nhật Hitbox và ESP mỗi 0.2 giây (không quá nhanh, không lag)
-local lastUpdate = 0
-rs.Heartbeat:Connect(function()
-    if (tick() - lastUpdate) < 0.2 then return end
-    lastUpdate = tick()
-    
+-- Main loop cập nhật ESP và Hitbox REALTIME mỗi frame
+rs.RenderStepped:Connect(function()
     for _, p in pairs(game.Players:GetPlayers()) do
+        -- Hitbox
         if settings.HitboxAll or settings.HitboxTeam then 
             applyHitboxReal(p, settings.HitboxTeam) 
         else 
             resetHitboxReal(p) 
         end
+        
+        -- ESP
         if settings.ESPAll or settings.ESPTeam then 
             applyESP(p, settings.ESPTeam) 
         else 
