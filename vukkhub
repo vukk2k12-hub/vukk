@@ -1,10 +1,10 @@
 -- Khởi tạo settings
 if not getgenv().BaconSettings then
     getgenv().BaconSettings = {
-        SpeedToggle=true, InfJump=false, Noclip=false,
+        SpeedToggle=false, InfJump=false, Noclip=false,
         HitboxAll=false, HitboxTeam=false,
         ESPAll=false, ESPTeam=false,
-        Speed=30, HitboxSize=20, HitboxTransparency=0.7,
+        Speed=30, HitboxSize=10, HitboxTransparency=0.7,
         HealthDisplay=false
     }
 end
