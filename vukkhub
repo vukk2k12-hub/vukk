@@ -299,75 +299,10 @@ local function resetESP(p)
     removeHealthBar(p)
 end
 
--- Monitor team changes - update ngay lập tức khi player đổi team
-game.Players:GetPropertyChangedSignal("Teams"):Connect(function()
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player then
-            local newTeam = p.Team
-            local oldTeam = playerTeams[p.UserId]
-            
-            if newTeam ~= oldTeam then
-                playerTeams[p.UserId] = newTeam
-                
-                -- Update hitbox khi đổi team
-                if settings.HitboxTeam then
-                    if shouldTargetPlayer(p, true) then
-                        applyHitboxReal(p, true)
-                    else
-                        resetHitboxReal(p)
-                    end
-                end
-                
-                -- Update ESP khi đổi team
-                if settings.ESPTeam then
-                    if shouldTargetPlayer(p, true) then
-                        applyESP(p, true)
-                    else
-                        resetESP(p)
-                    end
-                end
-            end
-        end
-    end
-end)
-
 -- Monitor team changes cho từng player
-for _, p in pairs(game.Players:GetPlayers()) do
-    if p ~= player then
-        p:GetPropertyChangedSignal("Team"):Connect(function()
-            local newTeam = p.Team
-            local oldTeam = playerTeams[p.UserId]
-            
-            if newTeam ~= oldTeam then
-                playerTeams[p.UserId] = newTeam
-                
-                -- Update hitbox ngay lập tức
-                if settings.HitboxTeam then
-                    if shouldTargetPlayer(p, true) then
-                        applyHitboxReal(p, true)
-                    else
-                        resetHitboxReal(p)
-                    end
-                end
-                
-                -- Update ESP ngay lập tức
-                if settings.ESPTeam then
-                    if shouldTargetPlayer(p, true) then
-                        applyESP(p, true)
-                    else
-                        resetESP(p)
-                    end
-                end
-            end
-        end)
-    end
-end
-
--- Track player join
-game.Players.PlayerAdded:Connect(function(p)
-    playerTeams[p.UserId] = p.Team
+local function setupTeamMonitor(p)
+    if p == player then return end
     
-    -- Monitor team changes cho player mới
     p:GetPropertyChangedSignal("Team"):Connect(function()
         local newTeam = p.Team
         local oldTeam = playerTeams[p.UserId]
@@ -375,6 +310,7 @@ game.Players.PlayerAdded:Connect(function(p)
         if newTeam ~= oldTeam then
             playerTeams[p.UserId] = newTeam
             
+            -- Update hitbox ngay lập tức
             if settings.HitboxTeam then
                 if shouldTargetPlayer(p, true) then
                     applyHitboxReal(p, true)
@@ -383,6 +319,7 @@ game.Players.PlayerAdded:Connect(function(p)
                 end
             end
             
+            -- Update ESP ngay lập tức
             if settings.ESPTeam then
                 if shouldTargetPlayer(p, true) then
                     applyESP(p, true)
@@ -392,6 +329,20 @@ game.Players.PlayerAdded:Connect(function(p)
             end
         end
     end)
+end
+
+-- Setup team monitor cho tất cả player hiện tại
+for _, p in pairs(game.Players:GetPlayers()) do
+    if p ~= player then
+        playerTeams[p.UserId] = p.Team
+        setupTeamMonitor(p)
+    end
+end
+
+-- Track player join
+game.Players.PlayerAdded:Connect(function(p)
+    playerTeams[p.UserId] = p.Team
+    setupTeamMonitor(p)
 end)
 
 -- Track player leave
