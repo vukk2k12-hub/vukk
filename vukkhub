@@ -438,7 +438,7 @@ addScriptButton("floatvuhub",20,70,"https://raw.githubusercontent.com/vukk2k12-h
 addScriptButton("adminhub",20,120,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
 addScriptButton("afkvuhub",20,170,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
 addScriptButton("ma",20,220,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
-addScriptButton("blox fruit",210,170,"https://raw.githubusercontent.com/thihaccff-alt/H-hhhaa/refs/heads/main/MainBosturUiRedzHub-obfuscated.lua")
+addScriptButton("blox fruit",210,170,"https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
 -------------------------------------------------
 -- TAB SETTING
 local speedLabel = Instance.new("TextLabel", Tabs["Setting"])
