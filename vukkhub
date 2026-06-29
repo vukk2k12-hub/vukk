@@ -3,7 +3,7 @@ if not getgenv().BaconSettings then
     getgenv().BaconSettings = {
         SpeedToggle=true, InfJump=false, Noclip=false,
         HitboxAll=false, HitboxTeam=false,
-        ESPAll=false, ESPTeam=false,
+        ESPAll=false, ESPTeam=false, ESPFriend=false, -- Thêm ESPFriend
         Speed=30, HitboxSize=20, HitboxTransparency=0.7,
         HealthDisplay=false
     }
@@ -14,6 +14,7 @@ local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local rs = game:GetService("RunService")
 local players = game:GetService("Players")
+local tweenService = game:GetService("TweenService")
 
 -- Cache để tránh lag
 local playerCache = {}
@@ -33,16 +34,56 @@ ToggleButton.Draggable = true
 
 -- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0,420,0,320)
-MainFrame.Position = UDim2.new(0.5,-210,0.5,-160)
+local originalSize = UDim2.new(0,420,0,320)
+local originalPosition = UDim2.new(0.5,-210,0.5,-160)
+MainFrame.Size = originalSize
+MainFrame.Position = originalPosition
 MainFrame.BackgroundColor3 = Color3.fromRGB(173,216,230)
 MainFrame.Visible = true
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
 
+-- Thêm viền Light Blue Sky cho Main Frame
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = Color3.fromRGB(135, 206, 250) -- Light Sky Blue
+UIStroke.Thickness = 2.5
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Hiệu ứng đóng/mở mượt (Tween)
+local isTweening = false
 ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+    if isTweening then return end
+    isTweening = true
+    
+    if MainFrame.Visible then
+        -- Hiệu ứng thu nhỏ biến mất
+        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            MainFrame.Visible = false
+            isTweening = false
+        end)
+    else
+        -- Chuẩn bị trước khi phóng to
+        MainFrame.Size = UDim2.new(0, 0, 0, 0)
+        MainFrame.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
+        MainFrame.Visible = true
+        
+        -- Hiệu ứng phóng to xuất hiện
+        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = originalSize,
+            Position = originalPosition
+        })
+        tween:Play()
+        tween.Completed:Connect(function()
+            isTweening = false
+        end)
+    end
 end)
 
 -- Tab bar
@@ -169,7 +210,6 @@ end)
 -- TAB VISION
 local function applyHitboxReal(p, teamCheck)
     if p == player or not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
-    
     if teamCheck and p.Team == player.Team then return end
 
     local hrp = p.Character.HumanoidRootPart
@@ -181,25 +221,19 @@ end
 
 local function resetHitboxReal(p)
     if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
-    
     local hrp = p.Character.HumanoidRootPart
     hrp.Size = Vector3.new(2,2,1)
     hrp.Transparency = 1
 end
 
 local function getHealthColor(hp)
-    if hp >= 80 then
-        return Color3.fromRGB(0, 255, 0) -- Xanh lá
-    elseif hp > 30 then
-        return Color3.fromRGB(255, 255, 0) -- Vàng
-    else
-        return Color3.fromRGB(255, 0, 0) -- Đỏ
-    end
+    if hp >= 80 then return Color3.fromRGB(0, 255, 0)
+    elseif hp > 30 then return Color3.fromRGB(255, 255, 0)
+    else return Color3.fromRGB(255, 0, 0) end
 end
 
 local function createHealthBar(p)
     if p == player or not p.Character or p.Character:FindFirstChild("BaconHealthBar") then return end
-    
     local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return end
     
@@ -227,14 +261,12 @@ local function createHealthBar(p)
     local function updateHealth(newHealth)
         local maxHealth = humanoid.MaxHealth
         local ratio = math.max(0, math.min(1, newHealth / maxHealth))
-        
         healthBar.Size = UDim2.new(ratio, -4, 1, -4)
         healthBar.BackgroundColor3 = getHealthColor(newHealth)
     end
     
     updateHealth(humanoid.Health)
     humanoid.HealthChanged:Connect(updateHealth)
-    
     humanoid.Died:Connect(function()
         if billboardGui.Parent then billboardGui:Destroy() end
     end)
@@ -246,19 +278,55 @@ local function removeHealthBar(p)
     end
 end
 
+-- TÍNH NĂNG ESP FRIEND VÀ ĐỔI MÀU / HIỆN TÊN TÊN ĐẦU
 local function applyESP(p, teamCheck)
     if p == player or not p.Character then return end
-    
     if teamCheck and p.Team == player.Team then return end
     
-    if not p.Character:FindFirstChild("BaconESP") then
-        local hl = Instance.new("Highlight")
+    local isFriend = player:IsFriendsWith(p.UserId)
+    local finalColor = Color3.fromRGB(135,206,235) -- Mặc định xanh biển
+    
+    -- Nếu bật ESP Friend và người này là bạn bè -> Đổi màu xanh lá
+    if settings.ESPFriend and isFriend then
+        finalColor = Color3.fromRGB(0, 255, 128) -- Xanh lá Neon sáng
+    end
+
+    local hl = p.Character:FindFirstChild("BaconESP")
+    if not hl then
+        hl = Instance.new("Highlight")
         hl.Name = "BaconESP"
         hl.FillTransparency = 1
         hl.OutlineTransparency = 0
-        hl.OutlineColor = Color3.fromRGB(135,206,235)
         hl.Adornee = p.Character
         hl.Parent = p.Character
+    end
+    hl.OutlineColor = finalColor
+
+    -- Hiện tên lên đầu cho bạn bè khi bật ESP Friend
+    if settings.ESPFriend and isFriend then
+        if not p.Character:FindFirstChild("FriendNameTag") then
+            local tag = Instance.new("BillboardGui")
+            tag.Name = "FriendNameTag"
+            tag.Size = UDim2.new(0, 200, 0, 50)
+            tag.StudsOffset = Vector3.new(0, 6.5, 0) -- Trên thanh máu một chút
+            tag.AlwaysOnTop = true
+            tag.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
+            tag.Parent = p.Character
+
+            local tl = Instance.new("TextLabel", tag)
+            tl.Size = UDim2.new(1, 0, 1, 0)
+            tl.BackgroundTransparency = 1
+            tl.Text = "[FRIEND] " .. p.DisplayName
+            tl.TextColor3 = Color3.fromRGB(0, 255, 128)
+            tl.Font = Enum.Font.GothamBold
+            tl.TextSize = 14
+            tl.TextStrokeTransparency = 0
+            tl.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+        end
+    else
+        if p.Character:FindFirstChild("FriendNameTag") then
+            p.Character.FriendNameTag:Destroy()
+        end
     end
     
     if settings.HealthDisplay then
@@ -268,139 +336,83 @@ end
 
 local function resetESP(p)
     if not p.Character then return end
-    
-    if p.Character:FindFirstChild("BaconESP") then
-        p.Character.BaconESP:Destroy()
-    end
+    if p.Character:FindFirstChild("BaconESP") then p.Character.BaconESP:Destroy() end
+    if p.Character:FindFirstChild("FriendNameTag") then p.Character.FriendNameTag:Destroy() end
     removeHealthBar(p)
 end
 
--- HỖ TRỢ THAY ĐỔI TEAM NGAY LẬP TỨC
 local function updatePlayerTeamStatus(p)
-    if not playerCache[p.UserId] then
-        playerCache[p.UserId] = { team = p.Team }
-    end
-    
+    if not playerCache[p.UserId] then playerCache[p.UserId] = { team = p.Team } end
     local oldTeam = playerCache[p.UserId].team
     local newTeam = p.Team
     
-    -- Nếu team đổi, cập nhật ngay
     if oldTeam ~= newTeam then
         playerCache[p.UserId].team = newTeam
-        
-        -- Reset ESP/Hitbox cũ
         if p.Character then
             resetESP(p)
             resetHitboxReal(p)
         end
         
-        -- Áp dụng cái mới nếu cần
         if settings.HitboxAll or settings.HitboxTeam then
-            if settings.HitboxAll then
-                applyHitboxReal(p, false)
-            elseif settings.HitboxTeam then
-                applyHitboxReal(p, true)
-            end
+            if settings.HitboxAll then applyHitboxReal(p, false)
+            elseif settings.HitboxTeam then applyHitboxReal(p, true) end
         end
-        
         if settings.ESPAll or settings.ESPTeam then
             applyESP(p, settings.ESPTeam)
         end
     end
 end
 
--- Nút Hitbox
-createToggleButton(Tabs["Vision"],"Hitbox All",20,"HitboxAll",function(on)
-    if on then
-        settings.HitboxTeam = false
-    end
-end)
-
-createToggleButton(Tabs["Vision"],"Hitbox Team",70,"HitboxTeam",function(on)
-    if on then
-        settings.HitboxAll = false
-    end
-end)
-
+createToggleButton(Tabs["Vision"],"Hitbox All",20,"HitboxAll",function(on) if on then settings.HitboxTeam = false end end)
+createToggleButton(Tabs["Vision"],"Hitbox Team",70,"HitboxTeam",function(on) if on then settings.HitboxAll = false end end)
 createToggleButton(Tabs["Vision"],"ESP All",120,"ESPAll",function() end)
 createToggleButton(Tabs["Vision"],"ESP Team",170,"ESPTeam",function() end)
+createToggleButton(Tabs["Vision"],"ESP Friend",220,"ESPFriend",function() end) -- Nút ESP Friend mới
 
--- CHỈNH SỬA: Dùng Heartbeat thay vì RenderStepped (ít lag hơn)
--- VÀ CHỈ CẬP NHẬT KHI CẦN THIẾT
 rs.Heartbeat:Connect(function()
     for _, p in pairs(players:GetPlayers()) do
         if p ~= player then
-            -- Kiểm tra thay đổi team
             updatePlayerTeamStatus(p)
-            
-            -- Chỉ cập nhật nếu có thay đổi settings
             if p.Character then
-                if settings.HitboxAll then 
-                    applyHitboxReal(p, false)
-                elseif settings.HitboxTeam then
-                    applyHitboxReal(p, true)
-                else 
-                    resetHitboxReal(p)
-                end
+                if settings.HitboxAll then applyHitboxReal(p, false)
+                elseif settings.HitboxTeam then applyHitboxReal(p, true)
+                else resetHitboxReal(p) end
                 
-                if settings.ESPAll then 
-                    applyESP(p, false) 
-                elseif settings.ESPTeam then
-                    applyESP(p, true)
-                else 
-                    resetESP(p) 
-                end
+                if settings.ESPAll then applyESP(p, false)
+                elseif settings.ESPTeam then applyESP(p, true)
+                elseif settings.ESPFriend and player:IsFriendsWith(p.UserId) then applyESP(p, false) -- Bật lẻ ESP Friend vẫn chạy
+                else resetESP(p) end
             end
         end
     end
 end)
 
--- LẮNG NGHE SỰ KIỆN TEAM THAY ĐỔI NGAY LẬP TỨC
+-- Lắng nghe sự kiện character load
 for _, p in pairs(players:GetPlayers()) do
     if p ~= player then
         p.CharacterAdded:Connect(function()
-            wait(0.1) -- Chờ nhân vật load xong
-            if settings.HitboxAll then
-                applyHitboxReal(p, false)
-            elseif settings.HitboxTeam then
-                applyHitboxReal(p, true)
-            end
-            if settings.ESPAll then
-                applyESP(p, false)
-            elseif settings.ESPTeam then
-                applyESP(p, true)
-            end
+            task.wait(0.1)
+            if settings.HitboxAll then applyHitboxReal(p, false)
+            elseif settings.HitboxTeam then applyHitboxReal(p, true) end
+            if settings.ESPAll then applyESP(p, false)
+            elseif settings.ESPTeam then applyESP(p, true) end
         end)
     end
 end
 
 players.PlayerAdded:Connect(function(p)
     playerCache[p.UserId] = { team = p.Team }
-    
-    p.Changed:Connect(function(prop)
-        if prop == "Team" then
-            updatePlayerTeamStatus(p)
-        end
-    end)
-    
+    p.Changed:Connect(function(prop) if prop == "Team" then updatePlayerTeamStatus(p) end end)
     p.CharacterAdded:Connect(function()
-        wait(0.1)
-        if settings.HitboxAll then
-            applyHitboxReal(p, false)
-        elseif settings.HitboxTeam then
-            applyHitboxReal(p, true)
-        end
-        if settings.ESPAll then
-            applyESP(p, false)
-        elseif settings.ESPTeam then
-            applyESP(p, true)
-        end
+        task.wait(0.1)
+        if settings.HitboxAll then applyHitboxReal(p, false)
+        elseif settings.HitboxTeam then applyHitboxReal(p, true) end
+        if settings.ESPAll then applyESP(p, false)
+        elseif settings.ESPTeam then applyESP(p, true) end
     end)
 end)
 
-players.PlayerRemoving:Connect(function(p)
-    playerCache[p.UserId] = nil
-end)
+players.PlayerRemoving:Connect(function(p) playerCache[p.UserId] = nil end)
 
 -------------------------------------------------
 -- TAB SCRIPT (SCROLL ĐƯỢC)
@@ -421,12 +433,8 @@ local function addScriptButton(name,x,y,url)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
 
     btn.MouseButton1Click:Connect(function()
-        local success, err = pcall(function()
-            loadstring(game:HttpGet(url))()
-        end)
-        if not success then
-            warn("Failed to load script "..name..": "..err)
-        end
+        local success, err = pcall(function() loadstring(game:HttpGet(url))() end)
+        if not success then warn("Failed to load script "..name..": "..err) end
     end)
 end
 
@@ -439,6 +447,7 @@ addScriptButton("adminhub",20,120,"https://raw.githubusercontent.com/vukk2k12-hu
 addScriptButton("afkvuhub",20,170,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
 addScriptButton("ma",20,220,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
 addScriptButton("blox fruit",210,170,"https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
+
 -------------------------------------------------
 -- TAB SETTING
 local speedLabel = Instance.new("TextLabel", Tabs["Setting"])
@@ -514,13 +523,11 @@ end)
 createToggleButton(Tabs["Setting"],"Health Display",205,"HealthDisplay",function(on)
     if on then
         for _, p in pairs(players:GetPlayers()) do
-            if p ~= player and p.Character and (settings.ESPAll or settings.ESPTeam) then
+            if p ~= player and p.Character and (settings.ESPAll or settings.ESPTeam or settings.ESPFriend) then
                 createHealthBar(p)
             end
         end
     else
-        for _, p in pairs(players:GetPlayers()) do
-            removeHealthBar(p)
-        end
+        for _, p in pairs(players:GetPlayers()) do removeHealthBar(p) end
     end
 end)
