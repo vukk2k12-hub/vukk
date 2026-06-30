@@ -1,10 +1,10 @@
 -- Khởi tạo settings
 if not getgenv().BaconSettings then
     getgenv().BaconSettings = {
-        SpeedToggle=true, InfJump=false, Noclip=false,
+        SpeedToggle=true, InfJump=false, Noclip=false, JumpToggle=false,
         HitboxAll=false, HitboxTeam=false,
         ESPAll=false, ESPTeam=false, ESPFriend=false,
-        Speed=30, HitboxSize=20, HitboxTransparency=0.7,
+        Speed=30, JumpPower=50, HitboxSize=20, HitboxTransparency=0.7,
         HealthDisplay=false
     }
 end
@@ -14,7 +14,11 @@ local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local rs = game:GetService("RunService")
 local players = game:GetService("Players")
+local teams = game:GetService("Teams")
 local tweenService = game:GetService("TweenService")
+local collectionService = game:GetService("CollectionService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local scriptContext = game:GetService("ScriptContext")
 
 -- Cache để tránh lag
 local playerCache = {}
@@ -32,121 +36,109 @@ ToggleButton.BackgroundTransparency = 1
 ToggleButton.Active = true
 ToggleButton.Draggable = true
 
--- Main Frame (Tăng chiều cao lên 355 để menu rộng rãi hơn)
+-- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
-local originalSize = UDim2.new(0,420,0,355)
-local originalPosition = UDim2.new(0.5,-210,0.5,-177)
+local originalSize = UDim2.new(0,450,0,320)
+local originalPosition = UDim2.new(0.5,-225,0.5,-160)
 MainFrame.Size = originalSize
 MainFrame.Position = originalPosition
-MainFrame.BackgroundColor3 = Color3.fromRGB(173,216,230)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.Visible = true
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.ClipsDescendants = true
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
 
--- Thêm viền hiệu ứng Light chạy xung quanh
+-- Viền hiệu ứng LED
 local UIStroke = Instance.new("UIStroke", MainFrame)
 UIStroke.Thickness = 3
 UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke.JoinMode = Enum.LineJoinMode.Round
 
 local UIGradient = Instance.new("UIGradient", UIStroke)
-local colorSequence = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 50, 150)),     -- Xanh đậm
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(135, 206, 250)), -- Xanh nhạt
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 50, 150))       -- Xanh đậm lặp lại
+local neonSequence = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 50, 150)),
+    ColorSequenceKeypoint.new(0.25, Color3.fromRGB(135, 206, 250)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 50, 150)),
+    ColorSequenceKeypoint.new(0.75, Color3.fromRGB(135, 206, 250)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 50, 150))
 })
-UIGradient.Color = colorSequence
+UIGradient.Color = neonSequence
 
--- Top Bar (Thanh chứa tiêu đề VUHUB PREMIUM phía trên 4 tab)
+-- Top Bar
 local TopBar = Instance.new("Frame", MainFrame)
-TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.Size = UDim2.new(1, 0, 0, 35)
 TopBar.Position = UDim2.new(0, 0, 0, 0)
 TopBar.BackgroundTransparency = 1
 
 local TitleLabel = Instance.new("TextLabel", TopBar)
-TitleLabel.Size = UDim2.new(1, -20, 1, 0)
-TitleLabel.Position = UDim2.new(0, 0, 0, 4)
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Text = "VUHUB PREMIUM"
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextSize = 13
+TitleLabel.TextSize = 14
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Right
-TitleLabel.TextStrokeTransparency = 0.8
-TitleLabel.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
 
--- Tạo UIGradient riêng cho chữ
 local TextGradient = Instance.new("UIGradient", TitleLabel)
-TextGradient.Color = colorSequence
+TextGradient.Color = neonSequence
 
--- Tab bar (Đặt ở vị trí Y = 30, ngay dưới Top Bar)
-local TabBar = Instance.new("Frame", MainFrame)
-TabBar.Size = UDim2.new(1, 0, 0, 32)
-TabBar.Position = UDim2.new(0, 0, 0, 30)
-TabBar.BackgroundColor3 = Color3.fromRGB(120,180,220)
-Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0,8)
+-- Thanh Tab dọc có thể cuộn (Scrolling Frame)
+local TabScroll = Instance.new("ScrollingFrame", MainFrame)
+TabScroll.Size = UDim2.new(0.25, -10, 1, -45)
+TabScroll.Position = UDim2.new(0, 10, 0, 35)
+TabScroll.BackgroundColor3 = Color3.fromRGB(32, 32, 45)
+TabScroll.BackgroundTransparency = 0
+TabScroll.CanvasSize = UDim2.new(0, 0, 0, 400)
+TabScroll.ScrollBarThickness = 2
+TabScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
+Instance.new("UICorner", TabScroll).CornerRadius = UDim.new(0,8)
 
--- Script điều khiển hiệu ứng viền quay + chữ đổi màu đồng bộ
+local UIListLayout = Instance.new("UIListLayout", TabScroll)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 6)
+
+-- Hiệu ứng LED chạy
+local offsetCounter = 0
 rs.RenderStepped:Connect(function()
     if MainFrame.Visible then
-        local currentRotation = (UIGradient.Rotation + 2) % 360
-        UIGradient.Rotation = currentRotation
-        TextGradient.Rotation = currentRotation
-        
-        local cosTime = (math.cos(tick() * 2) + 1) / 2
-        local darkBlue = Color3.fromRGB(0, 40 + (40 * cosTime), 130 + (50 * cosTime))
-        local lightBlue = Color3.fromRGB(135 - (35 * cosTime), 206 - (26 * cosTime), 250)
-        
-        local updatedSequence = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, darkBlue),
-            ColorSequenceKeypoint.new(0.5, lightBlue),
-            ColorSequenceKeypoint.new(1, darkBlue)
-        })
-        
-        UIGradient.Color = updatedSequence
-        TextGradient.Color = updatedSequence
+        UIGradient.Rotation = (UIGradient.Rotation + 1) % 360
+        TextGradient.Rotation = (TextGradient.Rotation + 1) % 360
+        offsetCounter = (offsetCounter + 0.01) % 1
+        UIGradient.Offset = Vector2.new(offsetCounter, 0)
+        TextGradient.Offset = Vector2.new(-offsetCounter, 0)
     end
 end)
 
--- Hiệu ứng đóng/mở mượt (Tween)
+-- Đóng mở Menu
 local isTweening = false
 ToggleButton.MouseButton1Click:Connect(function()
     if isTweening then return end
     isTweening = true
-    
     if MainFrame.Visible then
         local tween = tweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
         })
         tween:Play()
-        tween.Completed:Connect(function()
-            MainFrame.Visible = false
-            isTweening = false
-        end)
+        tween.Completed:Connect(function() MainFrame.Visible = false isTweening = false end)
     else
         MainFrame.Size = UDim2.new(0, 0, 0, 0)
         MainFrame.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
         MainFrame.Visible = true
-        
-        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = originalSize,
-            Position = originalPosition
-        })
+        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = originalSize, Position = originalPosition})
         tween:Play()
-        tween.Completed:Connect(function()
-            isTweening = false
-        end)
+        tween.Completed:Connect(function() isTweening = false end)
     end
 end)
 
--- Tạo các Tab Content (Dịch xuống dưới để nhường chỗ cho TopBar + TabBar)
+-- Tạo các vùng chứa nội dung Tab
 local Tabs = {}
 local function createTab(name)
     local tab = Instance.new("Frame")
-    tab.Size = UDim2.new(1, 0, 1, -67)
-    tab.Position = UDim2.new(0, 0, 0, 67)
+    tab.Size = UDim2.new(0.75, -15, 1, -45)
+    tab.Position = UDim2.new(0.25, 5, 0, 35)
     tab.BackgroundTransparency = 1
     tab.Name = name
     tab.Parent = MainFrame
@@ -156,63 +148,259 @@ end
 createTab("Main")
 createTab("Vision")
 createTab("Script")
+createTab("Hack Game")
 createTab("Setting")
 
 local function showTab(name)
     for n,f in pairs(Tabs) do f.Visible = (n==name) end
-    for _,btn in pairs(TabBar:GetChildren()) do
+    for _,btn in pairs(TabScroll:GetChildren()) do
         if btn:IsA("TextButton") then
-            btn.BackgroundColor3 = (btn.Text==name) and Color3.fromRGB(70,140,190) or Color3.fromRGB(120,180,220)
+            btn.BackgroundColor3 = (btn.Text==name) and Color3.fromRGB(50, 50, 70) or Color3.fromRGB(40, 40, 55)
+            btn.TextColor3 = (btn.Text==name) and Color3.fromRGB(135,206,250) or Color3.fromRGB(180, 180, 180)
         end
     end
 end
 
--- Hàm tự động cân chỉnh 4 nút Tab theo dạng phần trăm (Mỗi nút chiếm chuẩn 25% chiều rộng thanh)
 local function addTabButton(name, order)
-    local btn = Instance.new("TextButton", TabBar)
-    btn.Size = UDim2.new(0.25, 0, 1, 0)
-    btn.Position = UDim2.new((order-1) * 0.25, 0, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(120,180,220)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    local btn = Instance.new("TextButton", TabScroll)
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    btn.TextColor3 = Color3.fromRGB(180,180,180)
     btn.Text = name
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 12
+    btn.LayoutOrder = order
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.MouseButton1Click:Connect(function() showTab(name) end)
 end
 
-addTabButton("Main",1)
-addTabButton("Vision",2)
-addTabButton("Script",3)
-addTabButton("Setting",4)
-
+addTabButton("Main", 1)
+addTabButton("Vision", 2)
+addTabButton("Script", 3)
+addTabButton("Hack Game", 4)
+addTabButton("Setting", 9999)
 showTab("Main")
 
--- Toggle button helper
+-- Toggle Helper
 local function createToggleButton(parent,text,y,settingKey,callback)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0,200,0,40)
-    btn.Position = UDim2.new(0,20,0,y)
-    btn.BackgroundColor3 = Color3.fromRGB(135,206,235)
-    btn.TextColor3 = Color3.fromRGB(0,0,0)
+    btn.Size = UDim2.new(1,-10,0,32)
+    btn.Position = UDim2.new(0,5,0,y)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 12
     btn.Text = text.." : "..(settings[settingKey] and "ON" or "OFF")
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
     btn.MouseButton1Click:Connect(function()
         settings[settingKey] = not settings[settingKey]
         btn.Text = text.." : "..(settings[settingKey] and "ON" or "OFF")
+        btn.TextColor3 = settings[settingKey] and Color3.fromRGB(135,206,250) or Color3.fromRGB(255,255,255)
         callback(settings[settingKey])
     end)
 
     if settings[settingKey] then
         callback(true)
         btn.Text = text.." : ON"
+        btn.TextColor3 = Color3.fromRGB(135,206,250)
     end
+    return btn
 end
 
 -------------------------------------------------
--- TAB MAIN
-createToggleButton(Tabs["Main"],"Speed",20,"SpeedToggle",function(on)
+-- TAB HACK GAME (CÓ BẢNG SCAN TEAM VÀ SCAN ANTI-CHEAT)
+
+local HackGameScroll = Instance.new("ScrollingFrame", Tabs["Hack Game"])
+HackGameScroll.Size = UDim2.new(1, 0, 1, 0)
+HackGameScroll.BackgroundTransparency = 1
+HackGameScroll.CanvasSize = UDim2.new(0, 0, 0, 720) -- Tăng kích thước cuộn để vừa 2 bảng
+HackGameScroll.ScrollBarThickness = 2
+
+-- =========================================================
+-- BẢNG 1: PHÂN TÍCH LOẠI TEAM
+-- =========================================================
+local TeamStatusFrame = Instance.new("Frame", HackGameScroll)
+TeamStatusFrame.Size = UDim2.new(1, -10, 0, 160)
+TeamStatusFrame.Position = UDim2.new(0, 5, 0, 5)
+TeamStatusFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+Instance.new("UICorner", TeamStatusFrame).CornerRadius = UDim.new(0, 8)
+
+local TeamTitle = Instance.new("TextLabel", TeamStatusFrame)
+TeamTitle.Size = UDim2.new(1, 0, 0, 22)
+TeamTitle.BackgroundTransparency = 1
+TeamTitle.Text = "🔍 PHÂN TÍCH HỆ THỐNG TEAM CỦA GAME"
+TeamTitle.Font = Enum.Font.GothamBold
+TeamTitle.TextSize = 11
+TeamTitle.TextColor3 = Color3.fromRGB(135, 206, 250)
+
+local TeamContainer = Instance.new("Frame", TeamStatusFrame)
+TeamContainer.Size = UDim2.new(1, -10, 1, -25)
+TeamContainer.Position = UDim2.new(0, 5, 0, 24)
+TeamContainer.BackgroundTransparency = 1
+
+local TeamListLayout = Instance.new("UIListLayout", TeamContainer)
+TeamListLayout.Padding = UDim.new(0, 1)
+
+local teamLabels = {}
+local function makeTeamLabel(key, text)
+    local lbl = Instance.new("TextLabel", TeamContainer)
+    lbl.Size = UDim2.new(1, 0, 0, 14)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "• " .. text .. ": ❌ No"
+    lbl.Font = Enum.Font.GothamSemibold
+    lbl.TextSize = 10
+    lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    teamLabels[key] = {obj = lbl, text = text}
+end
+
+makeTeamLabel("Auto", "AutoAssignable System")
+makeTeamLabel("Spawn", "SpawnLocation Touch")
+makeTeamLabel("UI", "ScreenGui Choice")
+makeTeamLabel("Random", "Random Server Script")
+makeTeamLabel("Balanced", "Balanced Server Script")
+makeTeamLabel("Gated", "VIP / Level Gated Script")
+makeTeamLabel("Attr", "Virtual Team via Attributes")
+makeTeamLabel("Tag", "Virtual Team via Tags")
+makeTeamLabel("Money", "Monetized Team (Gamepass)")
+
+-- =========================================================
+-- BẢNG 2: KIỂM TRA CHỐNG HACK (ANTI-CHEAT SCANNER)
+-- =========================================================
+local AntiStatusFrame = Instance.new("Frame", HackGameScroll)
+AntiStatusFrame.Size = UDim2.new(1, -10, 0, 130)
+AntiStatusFrame.Position = UDim2.new(0, 5, 0, 170) -- Nằm ngay dưới bảng Team
+AntiStatusFrame.BackgroundColor3 = Color3.fromRGB(26, 18, 18) -- Đổi tone đỏ tối cảnh báo
+Instance.new("UICorner", AntiStatusFrame).CornerRadius = UDim.new(0, 8)
+
+local AntiTitle = Instance.new("TextLabel", AntiStatusFrame)
+AntiTitle.Size = UDim2.new(1, 0, 0, 22)
+AntiTitle.BackgroundTransparency = 1
+AntiTitle.Text = "🛡️ HỆ THỐNG KIỂM TRA ANTI-CHEAT"
+AntiTitle.Font = Enum.Font.GothamBold
+AntiTitle.TextSize = 11
+AntiTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+
+local AntiContainer = Instance.new("Frame", AntiStatusFrame)
+AntiContainer.Size = UDim2.new(1, -10, 1, -25)
+AntiContainer.Position = UDim2.new(0, 5, 0, 24)
+AntiContainer.BackgroundTransparency = 1
+
+local AntiListLayout = Instance.new("UIListLayout", AntiContainer)
+AntiListLayout.Padding = UDim.new(0, 1)
+
+local antiLabels = {}
+local function makeAntiLabel(key, text)
+    local lbl = Instance.new("TextLabel", AntiContainer)
+    lbl.Size = UDim2.new(1, 0, 0, 14)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "• " .. text .. ": 安全 Safe"
+    lbl.Font = Enum.Font.GothamSemibold
+    lbl.TextSize = 10
+    lbl.TextColor3 = Color3.fromRGB(150, 200, 150)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    antiLabels[key] = {obj = lbl, text = text}
+end
+
+-- Định nghĩa các loại Anti-Cheat quét được
+makeAntiLabel("Adonis", "Adonis Admin / Anti-Cheat")
+makeAntiLabel("Valkyrie", "Valkyrie / Vanguard Flag")
+makeAntiLabel("Memory", "WalkSpeed / JumpPower Memory Check")
+makeAntiLabel("Humanoid", "Humanoid Property State Check")
+makeAntiLabel("Remote", "RemoteEvent Spam & Ban Protection")
+makeAntiLabel("Byfron", "Hyperion / Byfron Client Engine")
+
+-- =========================================================
+-- HÀM QUÉT ĐỒNG THỜI CẢ TEAM & ANTI-CHEAT
+-- =========================================================
+local function MasterScanner()
+    ---------------- KHU VỰC QUÉT TEAM ----------------
+    local detects = { Auto = false, Spawn = false, UI = false, Random = false, Balanced = false, Gated = false, Attr = false, Tag = false, Money = false }
+    for _, t in pairs(teams:GetTeams()) do
+        if t.AutoAssignable then detects.Auto = true end
+        if string.find(string.lower(t.Name), "vip") or string.find(string.lower(t.Name), "pass") then detects.Money = true end
+    end
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("SpawnLocation") and obj.AllowTeamChangeOnTouch then detects.Spawn = true break end
+    end
+    local pGui = player:FindFirstChild("PlayerGui")
+    if pGui then
+        for _, gui in pairs(pGui:GetDescendants()) do
+            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                local n, t = string.lower(gui.Name), string.lower(gui:IsA("TextButton") and gui.Text or "")
+                if string.find(n, "team") or string.find(t, "choose") or string.find(t, "select") then detects.UI = true break end
+            end
+        end
+    end
+    for _, p in pairs(players:GetPlayers()) do
+        if p:GetAttribute("Team") or p:GetAttribute("Role") then detects.Attr = true end
+        if #collectionService:GetTags(p) > 0 then detects.Tag = true end
+        if p:FindFirstChild("leaderstats") and (p.leaderstats:FindFirstChild("Level") or p.leaderstats:FindFirstChild("Rank")) then detects.Gated = true end
+    end
+    local allTeams = teams:GetTeams()
+    if #allTeams > 1 then
+        local counts = {} for _, t in pairs(allTeams) do table.insert(counts, #t:GetPlayers()) end
+        table.sort(counts)
+        if counts[#counts] - counts[1] <= 1 and #players:GetPlayers() > 2 then detects.Balanced = true else detects.Random = true end
+    end
+    for key, state in pairs(detects) do
+        local labelData = teamLabels[key]
+        if labelData then
+            if state then labelData.obj.Text = "• " .. labelData.text .. ":  Yes" labelData.obj.TextColor3 = Color3.fromRGB(0, 255, 128)
+            else labelData.obj.Text = "• " .. labelData.text .. ": ❌ No" labelData.obj.TextColor3 = Color3.fromRGB(180, 180, 180) end
+        end
+    end
+
+    -------------- KHU VỰC QUÉT ANTI-CHEAT --------------
+    local antis = { Adonis = false, Valkyrie = false, Memory = false, Humanoid = false, Remote = false, Byfron = true } -- Byfron mặc định 2026 luôn bật ở client gốc Roblox
+
+    -- 1. Tìm kiếm Core Script ngầm (Adonis / Valkyrie) trong ReplicatedStorage và các vị trí lưu trữ công cộng
+    for _, item in pairs(game:GetDescendants()) do
+        if item:IsA("RemoteEvent") or item:IsA("RemoteFunction") then
+            local name = string.lower(item.Name)
+            if string.find(name, "adonis") or string.find(name, "loader") then antis.Adonis = true end
+            if string.find(name, "vanguard") or string.find(name, "valk") or string.find(name, "ac") then antis.Valkyrie = true end
+            if string.find(name, "check") or string.find(name, "detect") then antis.Remote = true end
+        end
+    end
+
+    -- 2. Kiểm tra giám sát thay đổi thuộc tính cục bộ (Humanoid State)
+    if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        -- Nếu game khóa hoặc liên tục gán giá trị ép WalkSpeed về gốc => Có check Memory / Humanoid
+        if hum.WalkSpeed == 16 and settings.SpeedToggle and settings.Speed > 30 then
+            antis.Memory = true
+        end
+    end
+
+    -- Hiển thị kết quả lên giao diện bảng Anti-Cheat
+    for key, state in pairs(antis) do
+        local labelData = antiLabels[key]
+        if labelData then
+            if state then
+                labelData.obj.Text = "• " .. labelData.text .. ": ⚠️ Yes (Phát hiện)"
+                labelData.obj.TextColor3 = Color3.fromRGB(255, 75, 75) -- Đỏ rực cảnh báo nguy hiểm
+            else
+                labelData.obj.Text = "• " .. labelData.text .. ": 安全 Safe"
+                labelData.obj.TextColor3 = Color3.fromRGB(150, 200, 150) -- Xanh an toàn
+            end
+        end
+    end
+end
+
+-- Vòng lặp cập nhật quét hệ thống sau mỗi 4 giây
+task.spawn(function()
+    while task.wait(4) do
+        if Tabs["Hack Game"].Visible then MasterScanner() end
+    end
+end)
+MasterScanner()
+
+-- =========================================================
+-- CÁC NÚT BẤM HACK ĐƯỢC ĐẨY XUỐNG DƯỚI (Y bắt đầu từ 310)
+-- =========================================================
+createToggleButton(HackGameScroll,"Speed",310,"SpeedToggle",function(on)
     if on then
         if not getgenv().SpeedConn then
             getgenv().SpeedConn = rs.Stepped:Connect(function()
@@ -223,13 +411,27 @@ createToggleButton(Tabs["Main"],"Speed",20,"SpeedToggle",function(on)
         end
     else
         if getgenv().SpeedConn then getgenv().SpeedConn:Disconnect() getgenv().SpeedConn=nil end
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 16
-        end
+        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = 16 end
     end
 end)
 
-createToggleButton(Tabs["Main"],"InfJump",70,"InfJump",function(on)
+createToggleButton(HackGameScroll,"JumpPower",350,"JumpToggle",function(on)
+    if on then
+        if not getgenv().JumpConn then
+            getgenv().JumpConn = rs.Stepped:Connect(function()
+                if player.Character and player.Character:FindFirstChild("Humanoid") then
+                    player.Character.Humanoid.UseJumpPower = true
+                    player.Character.Humanoid.JumpPower = settings.JumpPower
+                end
+            end)
+        end
+    else
+        if getgenv().JumpConn then getgenv().JumpConn:Disconnect() getgenv().JumpConn=nil end
+        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.JumpPower = 50 end
+    end
+end)
+
+createToggleButton(HackGameScroll,"InfJump",390,"InfJump",function(on)
     if on then
         if not getgenv().InfJumpConn then
             getgenv().InfJumpConn = uis.JumpRequest:Connect(function()
@@ -243,7 +445,7 @@ createToggleButton(Tabs["Main"],"InfJump",70,"InfJump",function(on)
     end
 end)
 
-createToggleButton(Tabs["Main"],"Noclip",120,"Noclip",function(on)
+createToggleButton(HackGameScroll,"Noclip",430,"Noclip",function(on)
     if on then
         if not getgenv().NoclipConn then
             getgenv().NoclipConn = rs.Stepped:Connect(function()
@@ -264,7 +466,6 @@ end)
 local function applyHitboxReal(p, teamCheck)
     if p == player or not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
     if teamCheck and p.Team == player.Team then return end
-
     local hrp = p.Character.HumanoidRootPart
     hrp.Size = Vector3.new(settings.HitboxSize, settings.HitboxSize, settings.HitboxSize)
     hrp.Transparency = settings.HitboxTransparency
@@ -320,27 +521,19 @@ local function createHealthBar(p)
     
     updateHealth(humanoid.Health)
     humanoid.HealthChanged:Connect(updateHealth)
-    humanoid.Died:Connect(function()
-        if billboardGui.Parent then billboardGui:Destroy() end
-    end)
+    humanoid.Died:Connect(function() if billboardGui.Parent then billboardGui:Destroy() end end)
 end
 
 local function removeHealthBar(p)
-    if p.Character and p.Character:FindFirstChild("BaconHealthBar") then
-        p.Character.BaconHealthBar:Destroy()
-    end
+    if p.Character and p.Character:FindFirstChild("BaconHealthBar") then p.Character.BaconHealthBar:Destroy() end
 end
 
 local function applyESP(p, teamCheck)
     if p == player or not p.Character then return end
     if teamCheck and p.Team == player.Team then return end
-    
     local isFriend = player:IsFriendsWith(p.UserId)
     local finalColor = Color3.fromRGB(135,206,235)
-    
-    if settings.ESPFriend and isFriend then
-        finalColor = Color3.fromRGB(0, 255, 128)
-    end
+    if settings.ESPFriend and isFriend then finalColor = Color3.fromRGB(0, 255, 128) end
 
     local hl = p.Character:FindFirstChild("BaconESP")
     if not hl then
@@ -374,14 +567,9 @@ local function applyESP(p, teamCheck)
             tl.TextStrokeColor3 = Color3.fromRGB(0,0,0)
         end
     else
-        if p.Character:FindFirstChild("FriendNameTag") then
-            p.Character.FriendNameTag:Destroy()
-        end
+        if p.Character:FindFirstChild("FriendNameTag") then p.Character.FriendNameTag:Destroy() end
     end
-    
-    if settings.HealthDisplay then
-        createHealthBar(p)
-    end
+    if settings.HealthDisplay then createHealthBar(p) end
 end
 
 local function resetESP(p)
@@ -395,29 +583,22 @@ local function updatePlayerTeamStatus(p)
     if not playerCache[p.UserId] then playerCache[p.UserId] = { team = p.Team } end
     local oldTeam = playerCache[p.UserId].team
     local newTeam = p.Team
-    
     if oldTeam ~= newTeam then
         playerCache[p.UserId].team = newTeam
-        if p.Character then
-            resetESP(p)
-            resetHitboxReal(p)
-        end
-        
+        if p.Character then resetESP(p) resetHitboxReal(p) end
         if settings.HitboxAll or settings.HitboxTeam then
             if settings.HitboxAll then applyHitboxReal(p, false)
             elseif settings.HitboxTeam then applyHitboxReal(p, true) end
         end
-        if settings.ESPAll or settings.ESPTeam then
-            applyESP(p, settings.ESPTeam)
-        end
+        if settings.ESPAll or settings.ESPTeam then applyESP(p, settings.ESPTeam) end
     end
 end
 
-createToggleButton(Tabs["Vision"],"Hitbox All",20,"HitboxAll",function(on) if on then settings.HitboxTeam = false end end)
-createToggleButton(Tabs["Vision"],"Hitbox Team",70,"HitboxTeam",function(on) if on then settings.HitboxAll = false end end)
-createToggleButton(Tabs["Vision"],"ESP All",120,"ESPAll",function() end)
-createToggleButton(Tabs["Vision"],"ESP Team",170,"ESPTeam",function() end)
-createToggleButton(Tabs["Vision"],"ESP Friend",220,"ESPFriend",function() end)
+createToggleButton(Tabs["Vision"],"Hitbox All",10,"HitboxAll",function(on) if on then settings.HitboxTeam = false end end)
+createToggleButton(Tabs["Vision"],"Hitbox Team",50,"HitboxTeam",function(on) if on then settings.HitboxAll = false end end)
+createToggleButton(Tabs["Vision"],"ESP All",90,"ESPAll",function() end)
+createToggleButton(Tabs["Vision"],"ESP Team",130,"ESPTeam",function() end)
+createToggleButton(Tabs["Vision"],"ESP Friend",170,"ESPFriend",function() end)
 
 rs.Heartbeat:Connect(function()
     for _, p in pairs(players:GetPlayers()) do
@@ -427,7 +608,6 @@ rs.Heartbeat:Connect(function()
                 if settings.HitboxAll then applyHitboxReal(p, false)
                 elseif settings.HitboxTeam then applyHitboxReal(p, true)
                 else resetHitboxReal(p) end
-                
                 if settings.ESPAll then applyESP(p, false)
                 elseif settings.ESPTeam then applyESP(p, true)
                 elseif settings.ESPFriend and player:IsFriendsWith(p.UserId) then applyESP(p, false)
@@ -437,49 +617,27 @@ rs.Heartbeat:Connect(function()
     end
 end)
 
-for _, p in pairs(players:GetPlayers()) do
-    if p ~= player then
-        p.CharacterAdded:Connect(function()
-            task.wait(0.1)
-            if settings.HitboxAll then applyHitboxReal(p, false)
-            elseif settings.HitboxTeam then applyHitboxReal(p, true) end
-            if settings.ESPAll then applyESP(p, false)
-            elseif settings.ESPTeam then applyESP(p, true) end
-        end)
-    end
-end
-
-players.PlayerAdded:Connect(function(p)
-    playerCache[p.UserId] = { team = p.Team }
-    p.Changed:Connect(function(prop) if prop == "Team" then updatePlayerTeamStatus(p) end end)
-    p.CharacterAdded:Connect(function()
-        task.wait(0.1)
-        if settings.HitboxAll then applyHitboxReal(p, false)
-        elseif settings.HitboxTeam then applyHitboxReal(p, true) end
-        if settings.ESPAll then applyESP(p, false)
-        elseif settings.ESPTeam then applyESP(p, true) end
-    end)
-end)
-
-players.PlayerRemoving:Connect(function(p) playerCache[p.UserId] = nil end)
-
 -------------------------------------------------
--- TAB SCRIPT
+-- TAB SCRIPT 
 local ScriptScroll = Instance.new("ScrollingFrame", Tabs["Script"])
-ScriptScroll.Size = UDim2.new(1,-10,1,-10)
-ScriptScroll.Position = UDim2.new(0,5,0,5)
-ScriptScroll.CanvasSize = UDim2.new(0,0,0,500)
-ScriptScroll.ScrollBarThickness = 6
+ScriptScroll.Size = UDim2.new(1,-5,1,-5)
+ScriptScroll.Position = UDim2.new(0,0,0,5)
+ScriptScroll.CanvasSize = UDim2.new(0,0,0,550)
+ScriptScroll.ScrollBarThickness = 4
 ScriptScroll.BackgroundTransparency = 1
 
-local function addScriptButton(name,x,y,url)
+local UIScriptList = Instance.new("UIListLayout", ScriptScroll)
+UIScriptList.SortOrder = Enum.SortOrder.LayoutOrder
+UIScriptList.Padding = UDim.new(0, 6)
+
+local function addScriptButton(name, url)
     local btn = Instance.new("TextButton", ScriptScroll)
-    btn.Size = UDim2.new(0,180,0,40)
-    btn.Position = UDim2.new(0,x,0,y)
-    btn.BackgroundColor3 = Color3.fromRGB(135,206,235)
+    btn.Size = UDim2.new(1, -10, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
     btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(0,0,0)
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamSemibold
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
     btn.MouseButton1Click:Connect(function()
         local success, err = pcall(function() loadstring(game:HttpGet(url))() end)
@@ -487,94 +645,80 @@ local function addScriptButton(name,x,y,url)
     end)
 end
 
-addScriptButton("FlyGui",20,20,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/flyvukkhub")
-addScriptButton("buildandsteal",210,20,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
-addScriptButton("Aimbotvuhub",210,70,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
-addScriptButton("tpvuhub",210,120,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
-addScriptButton("floatvuhub",20,70,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
-addScriptButton("adminhub",20,120,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
-addScriptButton("afkvuhub",20,170,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
-addScriptButton("ma",20,220,"https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
-addScriptButton("blox fruit",210,170,"https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
+addScriptButton("FlyGui", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/flyvukkhub")
+addScriptButton("buildandsteal", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
+addScriptButton("Aimbotvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
+addScriptButton("tpvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
+addScriptButton("floatvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
+addScriptButton("adminhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
+addScriptButton("afkvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
+addScriptButton("ma", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
+addScriptButton("blox fruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
+addScriptButton("benh vien", "https://airflowscript.com/loader")
 
 -------------------------------------------------
 -- TAB SETTING
-local speedLabel = Instance.new("TextLabel", Tabs["Setting"])
-speedLabel.Size = UDim2.new(0,150,0,20)
-speedLabel.Position = UDim2.new(0,20,0,10)
-speedLabel.BackgroundTransparency = 1
-speedLabel.TextColor3 = Color3.fromRGB(0,0,0)
-speedLabel.Text = "Speed"
-speedLabel.Font = Enum.Font.GothamBold
-speedLabel.TextSize = 14
+local SettingScroll = Instance.new("ScrollingFrame", Tabs["Setting"])
+SettingScroll.Size = UDim2.new(1,0,1,0)
+SettingScroll.CanvasSize = UDim2.new(0,0,0,350)
+SettingScroll.ScrollBarThickness = 3
+SettingScroll.BackgroundTransparency = 1
 
-local speedBox = Instance.new("TextBox", Tabs["Setting"])
-speedBox.Size = UDim2.new(0,150,0,35)
-speedBox.Position = UDim2.new(0,20,0,30)
-speedBox.PlaceholderText = "Speed"
-speedBox.Text = tostring(settings.Speed)
-speedBox.TextSize = 14
-Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0,10)
+local function createLabel(text, y, size)
+    local lbl = Instance.new("TextLabel", SettingScroll)
+    lbl.Size = UDim2.new(1,-10,0,20)
+    lbl.Position = UDim2.new(0,5,0,y)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(255,255,255)
+    lbl.Text = text
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = size or 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    return lbl
+end
 
-speedBox.FocusLost:Connect(function()
-    local val = tonumber(speedBox.Text)
+local function createTextBox(placeholder, y, defaultText, callback)
+    local box = Instance.new("TextBox", SettingScroll)
+    box.Size = UDim2.new(1,-10,0,32)
+    box.Position = UDim2.new(0,5,0,y)
+    box.PlaceholderText = placeholder
+    box.Text = defaultText
+    box.TextSize = 13
+    box.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    box.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
+    box.FocusLost:Connect(function() callback(box) end)
+    return box
+end
+
+createLabel("Speed Value", 5)
+createTextBox("Speed", 25, tostring(settings.Speed), function(box)
+    local val = tonumber(box.Text)
     if val and val>0 then settings.Speed = val end
 end)
 
-local hitboxLabel = Instance.new("TextLabel", Tabs["Setting"])
-hitboxLabel.Size = UDim2.new(0,150,0,20)
-hitboxLabel.Position = UDim2.new(0,20,0,75)
-hitboxLabel.BackgroundTransparency = 1
-hitboxLabel.TextColor3 = Color3.fromRGB(0,0,0)
-hitboxLabel.Text = "Hitbox Size"
-hitboxLabel.Font = Enum.Font.GothamBold
-hitboxLabel.TextSize = 14
+createLabel("Jump Power Value", 65)
+createTextBox("JumpPower", 85, tostring(settings.JumpPower), function(box)
+    local val = tonumber(box.Text)
+    if val and val>0 then settings.JumpPower = val end
+end)
 
-local hitboxBox = Instance.new("TextBox", Tabs["Setting"])
-hitboxBox.Size = UDim2.new(0,150,0,35)
-hitboxBox.Position = UDim2.new(0,20,0,95)
-hitboxBox.PlaceholderText = "Hitbox Size"
-hitboxBox.Text = tostring(settings.HitboxSize)
-hitboxBox.TextSize = 14
-Instance.new("UICorner", hitboxBox).CornerRadius = UDim.new(0,10)
-
-hitboxBox.FocusLost:Connect(function()
-    local val = tonumber(hitboxBox.Text)
+createLabel("Hitbox Size Value", 125)
+createTextBox("Hitbox Size", 145, tostring(settings.HitboxSize), function(box)
+    local val = tonumber(box.Text)
     if val and val>0 then settings.HitboxSize = val end
 end)
 
-local transparencyLabel = Instance.new("TextLabel", Tabs["Setting"])
-transparencyLabel.Size = UDim2.new(0,150,0,20)
-transparencyLabel.Position = UDim2.new(0,20,0,140)
-transparencyLabel.BackgroundTransparency = 1
-transparencyLabel.TextColor3 = Color3.fromRGB(0,0,0)
-transparencyLabel.Text = "Hitbox Transparency"
-transparencyLabel.Font = Enum.Font.GothamBold
-transparencyLabel.TextSize = 12
-
-local transparencyBox = Instance.new("TextBox", Tabs["Setting"])
-transparencyBox.Size = UDim2.new(0,150,0,35)
-transparencyBox.Position = UDim2.new(0,20,0,160)
-transparencyBox.PlaceholderText = "0-1"
-transparencyBox.Text = tostring(settings.HitboxTransparency)
-transparencyBox.TextSize = 14
-Instance.new("UICorner", transparencyBox).CornerRadius = UDim.new(0,10)
-
-transparencyBox.FocusLost:Connect(function()
-    local val = tonumber(transparencyBox.Text)
-    if val and val >= 0 and val <= 1 then 
-        settings.HitboxTransparency = val
-    else
-        transparencyBox.Text = tostring(settings.HitboxTransparency)
-    end
+createLabel("Hitbox Transparency (0-1)", 185)
+createTextBox("0-1", 205, tostring(settings.HitboxTransparency), function(box)
+    local val = tonumber(box.Text)
+    if val and val >= 0 and val <= 1 then settings.HitboxTransparency = val else box.Text = tostring(settings.HitboxTransparency) end
 end)
 
-createToggleButton(Tabs["Setting"],"Health Display",205,"HealthDisplay",function(on)
+createToggleButton(SettingScroll,"Health Display",245,"HealthDisplay",function(on)
     if on then
         for _, p in pairs(players:GetPlayers()) do
-            if p ~= player and p.Character and (settings.ESPAll or settings.ESPTeam or settings.ESPFriend) then
-                createHealthBar(p)
-            end
+            if p ~= player and p.Character and (settings.ESPAll or settings.ESPTeam or settings.ESPFriend) then createHealthBar(p) end
         end
     else
         for _, p in pairs(players:GetPlayers()) do removeHealthBar(p) end
