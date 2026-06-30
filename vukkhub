@@ -3,7 +3,7 @@ if not getgenv().BaconSettings then
     getgenv().BaconSettings = {
         SpeedToggle=true, InfJump=false, Noclip=false,
         HitboxAll=false, HitboxTeam=false,
-        ESPAll=false, ESPTeam=false, ESPFriend=false, -- Thêm ESPFriend
+        ESPAll=false, ESPTeam=false, ESPFriend=false,
         Speed=30, HitboxSize=20, HitboxTransparency=0.7,
         HealthDisplay=false
     }
@@ -32,10 +32,10 @@ ToggleButton.BackgroundTransparency = 1
 ToggleButton.Active = true
 ToggleButton.Draggable = true
 
--- Main Frame
+-- Main Frame (Tăng chiều cao lên 355 để menu rộng rãi hơn)
 local MainFrame = Instance.new("Frame", ScreenGui)
-local originalSize = UDim2.new(0,420,0,320)
-local originalPosition = UDim2.new(0.5,-210,0.5,-160)
+local originalSize = UDim2.new(0,420,0,355)
+local originalPosition = UDim2.new(0.5,-210,0.5,-177)
 MainFrame.Size = originalSize
 MainFrame.Position = originalPosition
 MainFrame.BackgroundColor3 = Color3.fromRGB(173,216,230)
@@ -45,11 +45,69 @@ MainFrame.Draggable = true
 MainFrame.ClipsDescendants = true
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
 
--- Thêm viền Light Blue Sky cho Main Frame
+-- Thêm viền hiệu ứng Light chạy xung quanh
 local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Color = Color3.fromRGB(135, 206, 250) -- Light Sky Blue
-UIStroke.Thickness = 2.5
+UIStroke.Thickness = 3
 UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local UIGradient = Instance.new("UIGradient", UIStroke)
+local colorSequence = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 50, 150)),     -- Xanh đậm
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(135, 206, 250)), -- Xanh nhạt
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 50, 150))       -- Xanh đậm lặp lại
+})
+UIGradient.Color = colorSequence
+
+-- Top Bar (Thanh chứa tiêu đề VUHUB PREMIUM phía trên 4 tab)
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.Position = UDim2.new(0, 0, 0, 0)
+TopBar.BackgroundTransparency = 1
+
+local TitleLabel = Instance.new("TextLabel", TopBar)
+TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+TitleLabel.Position = UDim2.new(0, 0, 0, 4)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "VUHUB PREMIUM"
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 13
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Right
+TitleLabel.TextStrokeTransparency = 0.8
+TitleLabel.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+
+-- Tạo UIGradient riêng cho chữ
+local TextGradient = Instance.new("UIGradient", TitleLabel)
+TextGradient.Color = colorSequence
+
+-- Tab bar (Đặt ở vị trí Y = 30, ngay dưới Top Bar)
+local TabBar = Instance.new("Frame", MainFrame)
+TabBar.Size = UDim2.new(1, 0, 0, 32)
+TabBar.Position = UDim2.new(0, 0, 0, 30)
+TabBar.BackgroundColor3 = Color3.fromRGB(120,180,220)
+Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0,8)
+
+-- Script điều khiển hiệu ứng viền quay + chữ đổi màu đồng bộ
+rs.RenderStepped:Connect(function()
+    if MainFrame.Visible then
+        local currentRotation = (UIGradient.Rotation + 2) % 360
+        UIGradient.Rotation = currentRotation
+        TextGradient.Rotation = currentRotation
+        
+        local cosTime = (math.cos(tick() * 2) + 1) / 2
+        local darkBlue = Color3.fromRGB(0, 40 + (40 * cosTime), 130 + (50 * cosTime))
+        local lightBlue = Color3.fromRGB(135 - (35 * cosTime), 206 - (26 * cosTime), 250)
+        
+        local updatedSequence = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, darkBlue),
+            ColorSequenceKeypoint.new(0.5, lightBlue),
+            ColorSequenceKeypoint.new(1, darkBlue)
+        })
+        
+        UIGradient.Color = updatedSequence
+        TextGradient.Color = updatedSequence
+    end
+end)
 
 -- Hiệu ứng đóng/mở mượt (Tween)
 local isTweening = false
@@ -58,7 +116,6 @@ ToggleButton.MouseButton1Click:Connect(function()
     isTweening = true
     
     if MainFrame.Visible then
-        -- Hiệu ứng thu nhỏ biến mất
         local tween = tweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
@@ -69,12 +126,10 @@ ToggleButton.MouseButton1Click:Connect(function()
             isTweening = false
         end)
     else
-        -- Chuẩn bị trước khi phóng to
         MainFrame.Size = UDim2.new(0, 0, 0, 0)
         MainFrame.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + (originalSize.X.Offset/2), originalPosition.Y.Scale, originalPosition.Y.Offset + (originalSize.Y.Offset/2))
         MainFrame.Visible = true
         
-        -- Hiệu ứng phóng to xuất hiện
         local tween = tweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = originalSize,
             Position = originalPosition
@@ -86,17 +141,12 @@ ToggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Tab bar
-local TabBar = Instance.new("Frame", MainFrame)
-TabBar.Size = UDim2.new(1,0,0,35)
-TabBar.BackgroundColor3 = Color3.fromRGB(120,180,220)
-Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0,8)
-
+-- Tạo các Tab Content (Dịch xuống dưới để nhường chỗ cho TopBar + TabBar)
 local Tabs = {}
 local function createTab(name)
     local tab = Instance.new("Frame")
-    tab.Size = UDim2.new(1,0,1,-35)
-    tab.Position = UDim2.new(0,0,0,35)
+    tab.Size = UDim2.new(1, 0, 1, -67)
+    tab.Position = UDim2.new(0, 0, 0, 67)
     tab.BackgroundTransparency = 1
     tab.Name = name
     tab.Parent = MainFrame
@@ -117,14 +167,17 @@ local function showTab(name)
     end
 end
 
-local function addTabButton(name,order)
+-- Hàm tự động cân chỉnh 4 nút Tab theo dạng phần trăm (Mỗi nút chiếm chuẩn 25% chiều rộng thanh)
+local function addTabButton(name, order)
     local btn = Instance.new("TextButton", TabBar)
-    btn.Size = UDim2.new(0,100,1,0)
-    btn.Position = UDim2.new(0,(order-1)*100,0,0)
+    btn.Size = UDim2.new(0.25, 0, 1, 0)
+    btn.Position = UDim2.new((order-1) * 0.25, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(120,180,220)
     btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Text = name
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.MouseButton1Click:Connect(function() showTab(name) end)
 end
 
@@ -278,17 +331,15 @@ local function removeHealthBar(p)
     end
 end
 
--- TÍNH NĂNG ESP FRIEND VÀ ĐỔI MÀU / HIỆN TÊN TÊN ĐẦU
 local function applyESP(p, teamCheck)
     if p == player or not p.Character then return end
     if teamCheck and p.Team == player.Team then return end
     
     local isFriend = player:IsFriendsWith(p.UserId)
-    local finalColor = Color3.fromRGB(135,206,235) -- Mặc định xanh biển
+    local finalColor = Color3.fromRGB(135,206,235)
     
-    -- Nếu bật ESP Friend và người này là bạn bè -> Đổi màu xanh lá
     if settings.ESPFriend and isFriend then
-        finalColor = Color3.fromRGB(0, 255, 128) -- Xanh lá Neon sáng
+        finalColor = Color3.fromRGB(0, 255, 128)
     end
 
     local hl = p.Character:FindFirstChild("BaconESP")
@@ -302,13 +353,12 @@ local function applyESP(p, teamCheck)
     end
     hl.OutlineColor = finalColor
 
-    -- Hiện tên lên đầu cho bạn bè khi bật ESP Friend
     if settings.ESPFriend and isFriend then
         if not p.Character:FindFirstChild("FriendNameTag") then
             local tag = Instance.new("BillboardGui")
             tag.Name = "FriendNameTag"
             tag.Size = UDim2.new(0, 200, 0, 50)
-            tag.StudsOffset = Vector3.new(0, 6.5, 0) -- Trên thanh máu một chút
+            tag.StudsOffset = Vector3.new(0, 6.5, 0)
             tag.AlwaysOnTop = true
             tag.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
             tag.Parent = p.Character
@@ -367,7 +417,7 @@ createToggleButton(Tabs["Vision"],"Hitbox All",20,"HitboxAll",function(on) if on
 createToggleButton(Tabs["Vision"],"Hitbox Team",70,"HitboxTeam",function(on) if on then settings.HitboxAll = false end end)
 createToggleButton(Tabs["Vision"],"ESP All",120,"ESPAll",function() end)
 createToggleButton(Tabs["Vision"],"ESP Team",170,"ESPTeam",function() end)
-createToggleButton(Tabs["Vision"],"ESP Friend",220,"ESPFriend",function() end) -- Nút ESP Friend mới
+createToggleButton(Tabs["Vision"],"ESP Friend",220,"ESPFriend",function() end)
 
 rs.Heartbeat:Connect(function()
     for _, p in pairs(players:GetPlayers()) do
@@ -380,14 +430,13 @@ rs.Heartbeat:Connect(function()
                 
                 if settings.ESPAll then applyESP(p, false)
                 elseif settings.ESPTeam then applyESP(p, true)
-                elseif settings.ESPFriend and player:IsFriendsWith(p.UserId) then applyESP(p, false) -- Bật lẻ ESP Friend vẫn chạy
+                elseif settings.ESPFriend and player:IsFriendsWith(p.UserId) then applyESP(p, false)
                 else resetESP(p) end
             end
         end
     end
 end)
 
--- Lắng nghe sự kiện character load
 for _, p in pairs(players:GetPlayers()) do
     if p ~= player then
         p.CharacterAdded:Connect(function()
@@ -415,7 +464,7 @@ end)
 players.PlayerRemoving:Connect(function(p) playerCache[p.UserId] = nil end)
 
 -------------------------------------------------
--- TAB SCRIPT (SCROLL ĐƯỢC)
+-- TAB SCRIPT
 local ScriptScroll = Instance.new("ScrollingFrame", Tabs["Script"])
 ScriptScroll.Size = UDim2.new(1,-10,1,-10)
 ScriptScroll.Position = UDim2.new(0,5,0,5)
