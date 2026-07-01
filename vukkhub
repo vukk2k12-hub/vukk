@@ -1,14 +1,26 @@
 -- ====================================================================
--- HỆ THỐNG MENU BLUE SKY - FULL SCRIPT VERSION (TAB 1 ĐẾN TAB 5)
+-- BLUE SKY INTERFACE - FULL CORE_GUI EXECUTOR VERSION
 -- ====================================================================
 
-local ScreenGui = script.Parent
+-- Khởi tạo và đẩy thẳng GUI vào CoreGui hệ thống (An toàn & Chống xóa)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BlueSkyCoreGui_Official"
+ScreenGui.ResetOnSpawn = false
+
+local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
+if success and coreGui then
+	ScreenGui.Parent = coreGui
+else
+	ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Khai báo các Services cần thiết của Roblox
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local Teams = game:GetService("Teams")
-
+local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
 -- Cấu hình hiệu ứng & Màu sắc chủ đạo (Gradient chuyển động)
@@ -26,7 +38,7 @@ local states = {
 	AntiFriend = false
 }
 
--- Cấu hình thông số mặc định có thể chỉnh sửa tại TAB 5
+-- Cấu hình thông số mặc định (Có thể chỉnh sửa tại TAB 5)
 local settingsConfig = {
 	SpeedValue = 100,
 	JumpValue = 150,
@@ -34,7 +46,7 @@ local settingsConfig = {
 	HitboxTransValue = 0.7
 }
 
--- Bộ nhớ đệm lưu dữ liệu gốc để khôi phục
+-- Bộ nhớ đệm lưu dữ liệu gốc để khôi phục khi tắt hack
 local xrayMemory = {}
 local hitboxMemory = {}
 local friendMemory = {}
@@ -57,14 +69,40 @@ local function checkIsFriend(targetPlayer)
 	if friendMemory[targetPlayer.UserId] ~= nil then
 		return friendMemory[targetPlayer.UserId]
 	end
-	local success, isFriend = pcall(function()
+	local successCheck, isFriend = pcall(function()
 		return localPlayer:IsFriendsWith(targetPlayer.UserId)
 	end)
-	if success then
+	if successCheck then
 		friendMemory[targetPlayer.UserId] = isFriend
 		return isFriend
 	end
 	return false
+end
+
+-- Hàm di chuyển menu (Kéo thả bằng chuột/tay)
+local function makeElementDraggable(guiObject)
+	local dragging, dragInput, dragStart, startPos
+	guiObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = guiObject.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	guiObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
 end
 
 -- Hàm vẽ text hiển thị Máu (HP) kẻ địch + Nhãn bạn bè
@@ -126,6 +164,8 @@ mainMenu.BorderSizePixel = 0
 mainMenu.ClipsDescendants = true
 mainMenu.Visible = false
 mainMenu.Parent = ScreenGui
+
+makeElementDraggable(mainMenu) -- Bật kéo thả cho menu chính
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.CornerRadius = UDim.new(0, 20)
@@ -410,7 +450,7 @@ task.spawn(function()
 						highlight.Adornee = player.Character
 						highlight.Parent = hrp
 						
-						highlight.FillTransparency = 1 -- Để rỗng ruột tạo thành hình hộp chữ nhật bao quanh
+						highlight.FillTransparency = 1 
 						highlight.OutlineTransparency = 0
 						
 						if states.CheckFriends and isFriend then
@@ -704,7 +744,6 @@ local function createSettingInputRow(labelText, placeholder, defaultVal, posY, c
 	end)
 end
 
--- Khởi tạo 4 ô nhập cấu hình của Tab 5
 createSettingInputRow("1. Tốc độ chạy (WalkSpeed):", "Nhập speed...", settingsConfig.SpeedValue, 50, function(val)
 	settingsConfig.SpeedValue = val
 	if states.Speed and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -732,7 +771,6 @@ createSettingInputRow("4. Độ trong suốt Hitbox (0 - 1):", "Nhập độ tro
 end)
 
 table.insert(tabCustomContainers["Setting"], settingMainPanel)
-
 
 -- ==========================================
 -- ĐỒNG BỘ HIỆU ỨNG CHUYỂN MÀU & NÚT MENU CHÍNH
@@ -769,10 +807,11 @@ end
 createCloud(UDim2.new(0, 180, 0, 60), 0.1, 20)
 createCloud(UDim2.new(0, 250, 0, 80), 0.4, 28)
 
+-- Nút tròn nhỏ kích hoạt Menu (☰) đặt cố định trên màn hình
 local menuButton = Instance.new("TextButton")
 menuButton.Name = "BlueSkyMenuBtn"
 menuButton.Size = UDim2.new(0, 60, 0, 60)
-menuButton.Position = UDim2.new(0, 20, 0, 20)
+menuButton.Position = UDim2.new(0, 20, 0, 110) -- Tránh bị đè bởi Topbar/Chat mặc định
 menuButton.BackgroundColor3 = colorLight
 menuButton.Text = "☰"
 menuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -780,6 +819,8 @@ menuButton.TextSize = 30
 menuButton.Font = Enum.Font.SourceSansBold
 menuButton.ZIndex = 10
 menuButton.Parent = ScreenGui
+
+makeElementDraggable(menuButton) -- Nút kích hoạt cũng có thể kéo di chuyển nếu vướng víu
 
 local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(0, 12)
@@ -790,6 +831,7 @@ btnStroke.Thickness = 3
 btnStroke.Color = colorDark
 btnStroke.Parent = menuButton
 
+-- Hệ thống Chroma tự động đổi màu mượt mà theo thời gian
 task.spawn(function()
 	while true do
 		local t1 = TweenService:Create(mainMenu, colorTweenInfo, {BackgroundColor3 = colorDark})
@@ -808,17 +850,19 @@ local isMenuOpen = false
 local basePosition = UDim2.new(0.5, 0, 0.5, 0)
 local bobbingConnection
 
+-- Hiệu ứng bồng bềnh (Bobbing Effect) nhẹ nhàng khi mở menu
 local function startBobbing()
 	if bobbingConnection then bobbingConnection:Disconnect() end
 	local startTime = os.clock()
 	bobbingConnection = RunService.RenderStepped:Connect(function()
 		if isMenuOpen then
 			local offset = math.sin((os.clock() - startTime) * 2) * 12
-			mainMenu.Position = UDim2.new(0.5, 0, 0.5, offset)
+			mainMenu.Position = UDim2.new(mainMenu.Position.X.Scale, mainMenu.Position.X.Offset, 0.5, offset)
 		end
 	end)
 end
 
+-- Logic ẩn/hiện menu khi click nút kích hoạt
 menuButton.MouseButton1Click:Connect(function()
 	isMenuOpen = not isMenuOpen
 	TweenService:Create(menuButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 52, 0, 52)}):Play()
