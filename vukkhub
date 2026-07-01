@@ -1,9 +1,9 @@
 -- ====================================================================
--- BLUE SKY INTERFACE - LIGHT CHROMATIC CORRECTION VERSION (2026)
+-- BLUE SKY MINI - ROTATE STAR, CHRONO GLOW & AURA FX (2026)
 -- ====================================================================
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BlueSkyCoreGui_FinalFix"
+ScreenGui.Name = "BlueSkyCoreGui_FXUpdate"
 ScreenGui.ResetOnSpawn = false
 
 local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -21,10 +21,12 @@ local Teams = game:GetService("Teams")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Khai báo hệ màu chuyển đổi tuần hoàn cho Viền Light
-local menuBgColor = Color3.fromRGB(15, 32, 67)       -- Nền Blue Sky tối
-local colorBlue = Color3.fromRGB(0, 0, 255)         -- Blue gốc
-local colorSky = Color3.fromRGB(135, 206, 250)      -- Sky nhạt phát sáng
+-- Khai báo hệ màu
+local colorBlue = Color3.fromRGB(0, 0, 255)         
+local colorSky = Color3.fromRGB(135, 206, 250)      
+local colorGreen = Color3.fromRGB(0, 255, 0)        
+local menuBgColor = colorSky                        
+local textColorWhite = Color3.fromRGB(255, 255, 255)
 
 local states = {
 	Speed = false, Noclip = false, JumpPower = false, InfJump = false, XRay = false,
@@ -93,20 +95,26 @@ local function createCustomESPText(character, targetPlayer, showFriend)
 	if not billboard then
 		billboard = Instance.new("BillboardGui")
 		billboard.Name = "CustomESP"
-		billboard.Size = UDim2.new(0, 200, 0, 60)
+		billboard.Size = UDim2.new(0, 180, 0, 50)
 		billboard.Adornee = head
 		billboard.AlwaysOnTop = true
-		billboard.ExtentsOffset = Vector3.new(0, 3, 0)
+		billboard.ExtentsOffset = Vector3.new(0, 2.5, 0)
 		billboard.Parent = head
 		
 		local label = Instance.new("TextLabel")
 		label.Name = "InfoLabel"
 		label.Size = UDim2.new(1, 0, 1, 0)
 		label.BackgroundTransparency = 1
-		label.TextColor3 = Color3.fromRGB(255, 255, 255)
-		label.TextSize = 13
+		label.TextColor3 = textColorWhite 
+		label.TextSize = 12
 		label.Font = Enum.Font.SourceSansBold
 		label.RichText = true
+		
+		local textStroke = Instance.new("UIStroke")
+		textStroke.Thickness = 1
+		textStroke.Color = Color3.fromRGB(0, 0, 0)
+		textStroke.Parent = label
+		
 		label.Parent = billboard
 	end
 	
@@ -115,12 +123,10 @@ local function createCustomESPText(character, targetPlayer, showFriend)
 	if humanoid then
 		local hp = math.floor(humanoid.Health)
 		local maxHp = math.floor(humanoid.MaxHealth)
-		local hpColor = "rgb(0,255,0)"
-		if hp < 30 then hpColor = "rgb(255,0,0)" elseif hp < 70 then hpColor = "rgb(255,165,0)" end
-		hpText = string.format("<br/><font color='%s'>[HP: %d/%d]</font>", hpColor, hp, maxHp)
+		hpText = string.format("<br/><font color='rgb(255,255,255)'>[HP: %d/%d]</font>", hp, maxHp)
 	end
 	
-	local friendText = showFriend and "<font color='rgb(0,255,0)'>[FRIEND]</font> " or ""
+	local friendText = showFriend and "<font color='rgb(255,255,255)'>[FRIEND]</font> " or ""
 	billboard.InfoLabel.Text = friendText .. targetPlayer.DisplayName .. hpText
 end
 
@@ -131,182 +137,187 @@ local function removeCustomESPText(character)
 end
 
 -- ==========================================
--- TẠO GIAO DIỆN CHÍNH (THU NHỎ MENU)
+-- TẠO GIAO DIỆN CHÍNH (MINI SIZE)
 -- ==========================================
 local mainMenu = Instance.new("Frame")
 mainMenu.Name = "BlueSkyMainMenu"
-mainMenu.Size = UDim2.new(0, 520, 0, 420) -- Thu nhỏ kích thước menu tổng thể gọn gàng hơn
+mainMenu.Size = UDim2.new(0, 400, 0, 320) 
 mainMenu.AnchorPoint = Vector2.new(0.5, 0.5)
 mainMenu.Position = UDim2.new(0.5, 0, 0.5, 0) 
-mainMenu.BackgroundColor3 = menuBgColor
+mainMenu.BackgroundColor3 = menuBgColor 
 mainMenu.BorderSizePixel = 0
-mainMenu.ClipsDescendants = true
+mainMenu.ClipsDescendants = false -- Để lộ phần ánh sáng tỏa ra ngoài (Glow)
 mainMenu.Visible = false
 mainMenu.Parent = ScreenGui
 
 makeElementDraggable(mainMenu)
 
 local menuCorner = Instance.new("UICorner")
-menuCorner.CornerRadius = UDim.new(0, 16)
+menuCorner.CornerRadius = UDim.new(0, 12)
 menuCorner.Parent = mainMenu
 
--- VIỀN LIGHT: Chuyển màu liên tiếp tuần hoàn Blue -> Sky -> Blue
+-- LỚP ÁNH SÁNG PHÁT SÀNG TỎA RA XUNG QUANH (GLOW AURA)
+local menuGlowAura = Instance.new("Frame")
+menuGlowAura.Name = "GlowAura"
+menuGlowAura.Size = UDim2.new(1.08, 0, 1.1, 0)
+menuGlowAura.Position = UDim2.new(-0.04, 0, -0.05, 0)
+menuGlowAura.BackgroundColor3 = colorSky
+menuGlowAura.BackgroundTransparency = 0.6
+menuGlowAura.ZIndex = -1
+menuGlowAura.Parent = mainMenu
+
+local glowCorner = Instance.new("UICorner")
+glowCorner.CornerRadius = UDim.new(0, 20)
+glowCorner.Parent = menuGlowAura
+
+-- Viền Menu chuyển màu nhấp nháy tuần hoàn
 local menuStroke = Instance.new("UIStroke")
 menuStroke.Color = colorBlue
 menuStroke.Transparency = 0.1
 menuStroke.Thickness = 2.5
 menuStroke.Parent = mainMenu
 
-task.spawn(function()
-	while true do
-		local tweenToSky = TweenService:Create(menuStroke, TweenInfo.new(2, Enum.EasingStyle.Linear), {Color = colorSky})
-		tweenToSky:Play() tweenToSky.Completed:Wait()
-		local tweenToBlue = TweenService:Create(menuStroke, TweenInfo.new(2, Enum.EasingStyle.Linear), {Color = colorBlue})
-		tweenToBlue:Play() tweenToBlue.Completed:Wait()
-	end
-end)
-
 local menuTitle = Instance.new("TextLabel")
-menuTitle.Size = UDim2.new(1, 0, 0, 50)
+menuTitle.Size = UDim2.new(1, 0, 0, 40)
 menuTitle.BackgroundTransparency = 1
-menuTitle.Text = "AETHER SKY INTERFACE"
-menuTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-menuTitle.TextSize = 20
+menuTitle.Text = "AETHER SKY MINI"
+menuTitle.TextColor3 = textColorWhite 
+menuTitle.TextSize = 18
 menuTitle.Font = Enum.Font.FredokaOne
 menuTitle.ZIndex = 5
 menuTitle.Parent = mainMenu
 
--- Thanh chọn Tab bên trái (CỐ ĐỊNH CHIỀU DỌC KHÔNG KÉO)
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Thickness = 1
+titleStroke.Color = Color3.fromRGB(20, 50, 100)
+titleStroke.Parent = menuTitle
+
+-- Thanh chọn Tab bên trái
 local leftTabBar = Instance.new("Frame")
-leftTabBar.Size = UDim2.new(0, 130, 0, 340) -- Chiều dọc cố định tương xứng menu nhỏ
-leftTabBar.Position = UDim2.new(0, 12, 0, 60)
-leftTabBar.BackgroundTransparency = 0.7
-leftTabBar.BackgroundColor3 = Color3.fromRGB(10, 20, 45)
+leftTabBar.Size = UDim2.new(0, 110, 0, 265) 
+leftTabBar.Position = UDim2.new(0, 10, 0, 45)
+leftTabBar.BackgroundTransparency = 0.5
+leftTabBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0) 
 leftTabBar.ZIndex = 4
 leftTabBar.Active = true
 leftTabBar.Parent = mainMenu
 
 local tabCorner = Instance.new("UICorner")
-tabCorner.CornerRadius = UDim.new(0, 10)
+tabCorner.CornerRadius = UDim.new(0, 8)
 tabCorner.Parent = leftTabBar
 
 local tabListLayout = Instance.new("UIListLayout")
-tabListLayout.Padding = UDim.new(0, 6)
+tabListLayout.Padding = UDim.new(0, 5)
 tabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 tabListLayout.Parent = leftTabBar
 
 local tabPadding = Instance.new("UIPadding")
-paddingTop = UDim.new(0, 8)
+tabPadding.PaddingTop = UDim.new(0, 6)
 tabPadding.Parent = leftTabBar
 
 -- Khung chứa chính bên phải
 local containerFrame = Instance.new("Frame")
-containerFrame.Size = UDim2.new(0, 355, 0, 340)
-containerFrame.Position = UDim2.new(0, 152, 0, 60)
+containerFrame.Size = UDim2.new(0, 265, 0, 265)
+containerFrame.Position = UDim2.new(0, 125, 0, 45)
 containerFrame.BackgroundTransparency = 1
 containerFrame.Parent = mainMenu
 
 local tabsMemory = {}
 local currentTab = "Main"
 
--- Giải pháp cấu trúc lại Tab chống kẹt / lag chuyển dữ liệu
 local function createTab(tabId, text, isDefault)
 	local tabBtn = Instance.new("TextButton")
-	tabBtn.Size = UDim2.new(0.9, 0, 0, 32)
-	tabBtn.BackgroundColor3 = colorSky
-	tabBtn.BackgroundTransparency = isDefault and 0.4 or 0.85
+	tabBtn.Size = UDim2.new(0.92, 0, 0, 28)
+	tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.BackgroundTransparency = isDefault and 0.7 or 0.95
 	tabBtn.Text = text
-	tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.TextColor3 = textColorWhite 
 	tabBtn.Font = Enum.Font.SourceSansBold
-	tabBtn.TextSize = 13
+	tabBtn.TextSize = 11
 	tabBtn.ZIndex = 5
 	tabBtn.Parent = leftTabBar
 	
 	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, 6)
+	c.CornerRadius = UDim.new(0, 5)
 	c.Parent = tabBtn
 
-	-- Tạo một ScrollingFrame riêng biệt cho từng Tab để cô lập layout
 	local page = Instance.new("ScrollingFrame")
 	page.Size = UDim2.new(1, 0, 1, 0)
-	page.BackgroundTransparency = 0.85
-	page.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	page.BackgroundTransparency = 0.5
+	page.BackgroundColor3 = Color3.fromRGB(0, 0, 0) 
 	page.BorderSizePixel = 0
 	page.Visible = isDefault
 	page.CanvasSize = UDim2.new(0, 0, 0, 0)
-	page.ScrollBarThickness = 4
-	page.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+	page.ScrollBarThickness = 3
+	page.ScrollBarImageColor3 = textColorWhite
 	page.Parent = containerFrame
 
 	local pCorner = Instance.new("UICorner")
-	pCorner.CornerRadius = UDim.new(0, 10)
+	pCorner.CornerRadius = UDim.new(0, 8)
 	pCorner.Parent = page
 
 	tabsMemory[tabId] = {Button = tabBtn, Page = page}
 
-	-- Thiết lập layout dạng Grid cho các tab thông thường
 	if tabId ~= "Hacker" and tabId ~= "Setting" then
 		local gridLayout = Instance.new("UIGridLayout")
-		gridLayout.CellSize = UDim2.new(0, 85, 0, 35) -- Giữ nguyên nút nhỏ 85x35
-		gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+		gridLayout.CellSize = UDim2.new(0, 75, 0, 32) 
+		gridLayout.CellPadding = UDim2.new(0, 8, 0, 8)
 		gridLayout.Parent = page
 
 		local scrollPadding = Instance.new("UIPadding")
-		scrollPadding.PaddingTop = UDim.new(0, 10)
-		scrollPadding.PaddingLeft = UDim.new(0, 10)
+		scrollPadding.PaddingTop = UDim.new(0, 8)
+		scrollPadding.PaddingLeft = UDim.new(0, 8)
 		scrollPadding.Parent = page
 		
-		-- Tự động cập nhật vùng cuộn dựa trên số phần tử bên trong
 		gridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 25)
+			page.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 20)
 		end)
 	else
-		-- Layout List dành riêng cho tab Custom
 		local listLayout = Instance.new("UIListLayout")
-		listLayout.Padding = UDim.new(0, 10)
+		listLayout.Padding = UDim.new(0, 8)
 		listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		listLayout.Parent = page
 
 		local scrollPadding = Instance.new("UIPadding")
-		scrollPadding.PaddingTop = UDim.new(0, 10)
+		scrollPadding.PaddingTop = UDim.new(0, 8)
 		scrollPadding.Parent = page
 
 		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 25)
+			page.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
 		end)
 	end
 
 	tabBtn.MouseButton1Click:Connect(function()
 		currentTab = tabId
 		for _, data in pairs(tabsMemory) do
-			data.Button.BackgroundTransparency = 0.85
+			data.Button.BackgroundTransparency = 0.95
 			data.Page.Visible = false
 		end
-		tabBtn.BackgroundTransparency = 0.4
+		tabBtn.BackgroundTransparency = 0.7
 		page.Visible = true
 	end)
 end
 
 createTab("Main", "Chính (Main)", true)
 createTab("ESPHitbox", "ESP & Hitbox", false)
-createTab("Scripts", "Kịch Bản (Script)", false)
+createTab("Scripts", "Kịch Bản", false)
 createTab("Hacker", "Hacker ☠️", false)
-createTab("Setting", "Cài đặt (Setting) ⚙️", false)
+createTab("Setting", "Cài đặt ⚙️", false)
 
 local function createCheatButton(tabId, name, displayName, callback)
 	local targetPage = tabsMemory[tabId].Page
 	local btn = Instance.new("TextButton")
 	btn.Text = displayName
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextColor3 = textColorWhite 
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 11
+	btn.TextSize = 10
 	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	btn.BackgroundTransparency = 0.85
 	btn.ZIndex = 5
 	btn.Parent = targetPage
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 6)
+	corner.CornerRadius = UDim.new(0, 5)
 	corner.Parent = btn
 	
 	local stroke = Instance.new("UIStroke")
@@ -318,12 +329,11 @@ local function createCheatButton(tabId, name, displayName, callback)
 	btn.MouseButton1Click:Connect(function()
 		states[name] = not states[name]
 		if states[name] then
-			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3, BackgroundColor3 = Color3.fromRGB(0, 255, 127)}):Play()
-			btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.2, BackgroundColor3 = colorSky}):Play()
 		else
 			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		end
+		btn.TextColor3 = textColorWhite
 		callback(states[name])
 	end)
 end
@@ -332,16 +342,16 @@ local function addScriptButton(displayName, url)
 	local targetPage = tabsMemory["Scripts"].Page
 	local btn = Instance.new("TextButton")
 	btn.Text = displayName
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextColor3 = textColorWhite 
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 11
+	btn.TextSize = 10
 	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	btn.BackgroundTransparency = 0.85
 	btn.ZIndex = 5
 	btn.Parent = targetPage
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 6)
+	corner.CornerRadius = UDim.new(0, 5)
 	corner.Parent = btn
 	
 	local stroke = Instance.new("UIStroke")
@@ -351,19 +361,16 @@ local function addScriptButton(displayName, url)
 	stroke.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
-		btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+		btn.BackgroundColor3 = colorSky
 		TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		task.delay(0.15, function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+		btn.TextColor3 = textColorWhite
 		pcall(function() loadstring(game:HttpGet(url))() end)
 	end)
 end
 
 -- ==========================================
--- LOGIC TÍNH NĂNG & THỜI GIAN THỰC (REALTIME)
+-- LOGIC TÍNH NĂNG & PHÂN MÀU (BẠN XANH LÁ | ĐỊCH SKY)
 -- ==========================================
-
--- --- TAB 1 ---
 createCheatButton("Main", "Speed", "Speed Hack", function(active)
 	local character = localPlayer.Character
 	if character and character:FindFirstChildOfClass("Humanoid") then 
@@ -413,7 +420,6 @@ createCheatButton("Main", "XRay", "X-Ray", function(active)
 	end
 end)
 
--- --- CẬP NHẬT TRỰC TIẾP ESP & HITBOX (REAL-TIME) ---
 local function updateESPAndHitboxForPlayer(player)
 	if player == localPlayer then return end
 	
@@ -436,7 +442,9 @@ local function updateESPAndHitboxForPlayer(player)
 		local isFriend = checkIsFriend(player)
 		local ignoreThisPlayer = states.AntiFriend and isFriend
 
-		-- ESP Box + HP text
+		local targetVisualColor = (isTeam or isFriend) and colorGreen or colorSky
+
+		-- ESP Box
 		local shouldESP = (states.ESPAll or (states.ESPTeam and isTeam)) and not ignoreThisPlayer
 		if shouldESP then
 			local highlight = hrp:FindFirstChild("ESPHighlight") or Instance.new("Highlight")
@@ -445,14 +453,9 @@ local function updateESPAndHitboxForPlayer(player)
 			highlight.Parent = hrp
 			highlight.FillTransparency = 1
 			highlight.OutlineTransparency = 0
+			highlight.OutlineColor = targetVisualColor 
 			
-			if states.CheckFriends and isFriend then
-				highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
-				createCustomESPText(character, player, true)
-			else
-				highlight.OutlineColor = isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0)
-				createCustomESPText(character, player, false)
-			end
+			createCustomESPText(character, player, states.CheckFriends and isFriend)
 		else
 			local highlight = hrp:FindFirstChild("ESPHighlight")
 			if highlight then highlight:Destroy() end
@@ -468,7 +471,7 @@ local function updateESPAndHitboxForPlayer(player)
 			hrp.Size = Vector3.new(settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue)
 			hrp.CanCollide = false
 			hrp.Transparency = settingsConfig.HitboxTransValue
-			hrp.Color = (states.CheckFriends and isFriend) and Color3.fromRGB(0, 255, 0) or (isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0))
+			hrp.Color = targetVisualColor 
 		else
 			if hitboxMemory[player] then
 				hrp.Size = hitboxMemory[player].Size
@@ -500,7 +503,7 @@ Players.PlayerRemoving:Connect(function(leftPlayer)
 end)
 
 createCheatButton("ESPHitbox", "AntiFriend", "Né Bạn 🛡️", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "CheckFriends", "Màu Bạn 👥", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "CheckFriends", "Tag Bạn bè 👥", function() triggerESPRefresh() end)
 createCheatButton("ESPHitbox", "ESPAll", "ESP Box", function() triggerESPRefresh() end)
 createCheatButton("ESPHitbox", "ESPTeam", "ESP Team", function() triggerESPRefresh() end)
 createCheatButton("ESPHitbox", "HitboxAll", "Hitbox All", function() triggerESPRefresh() end)
@@ -527,66 +530,42 @@ addScriptButton("BenhVien", "https://airflowscript.com/loader")
 
 -- --- TAB 4 (HACKER PANEL) ---
 local hackerPage = tabsMemory["Hacker"].Page
-
 local antiCheatPanel = Instance.new("Frame")
-antiCheatPanel.Name = "AntiCheatPanel"
-antiCheatPanel.Size = UDim2.new(0.92, 0, 0, 130)
-antiCheatPanel.BackgroundColor3 = Color3.fromRGB(10, 15, 35)
-antiCheatPanel.BackgroundTransparency = 0.4
+antiCheatPanel.Size = UDim2.new(0.94, 0, 0, 100)
+antiCheatPanel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+antiCheatPanel.BackgroundTransparency = 0.5
 antiCheatPanel.Parent = hackerPage
 
 local p1Corner = Instance.new("UICorner")
-p1Corner.CornerRadius = UDim.new(0, 8)
+p1Corner.CornerRadius = UDim.new(0, 6)
 p1Corner.Parent = antiCheatPanel
 
 local p1Title = Instance.new("TextLabel")
-p1Title.Size = UDim2.new(1, 0, 0, 30)
+p1Title.Size = UDim2.new(1, 0, 0, 25)
 p1Title.BackgroundTransparency = 1
-p1Title.Text = "🛡️ SERVER ANTI-CHEAT STATUS"
-p1Title.TextColor3 = Color3.fromRGB(255, 85, 85)
-p1Title.TextSize = 12
+p1Title.Text = "🛡️ ANTI-CHEAT STATUS"
+p1Title.TextColor3 = textColorWhite 
+p1Title.TextSize = 11
 p1Title.Font = Enum.Font.FredokaOne
 p1Title.Parent = antiCheatPanel
 
 local function createStatusLabel(text, posY, parent)
 	local lbl = Instance.new("TextLabel")
-	lbl.Size = UDim2.new(0.9, 0, 0, 22)
+	lbl.Size = UDim2.new(0.9, 0, 0, 18)
 	lbl.Position = UDim2.new(0.05, 0, 0, posY)
 	lbl.BackgroundTransparency = 1
 	lbl.Text = text
-	lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-	lbl.TextSize = 12
+	lbl.TextColor3 = textColorWhite 
+	lbl.TextSize = 11
 	lbl.Font = Enum.Font.SourceSansBold
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = parent
 	return lbl
 end
 
-local antiTpLabel = createStatusLabel("• Anti TP: SCANNING...", 35, antiCheatPanel)
-local antiSpeedLabel = createStatusLabel("• Anti Speed: SCANNING...", 60, antiCheatPanel)
-local antiFlyLabel = createStatusLabel("• Anti Fly: SCANNING...", 85, antiCheatPanel)
-
-local teamCheckPanel = Instance.new("Frame")
-teamCheckPanel.Name = "TeamCheckPanel"
-teamCheckPanel.Size = UDim2.new(0.92, 0, 0, 75)
-teamCheckPanel.BackgroundColor3 = Color3.fromRGB(10, 15, 35)
-teamCheckPanel.BackgroundTransparency = 0.4
-teamCheckPanel.Parent = hackerPage
-
-local p2Corner = Instance.new("UICorner")
-p2Corner.CornerRadius = UDim.new(0, 8)
-p2Corner.Parent = teamCheckPanel
-
-local p2Title = Instance.new("TextLabel")
-p2Title.Size = UDim2.new(1, 0, 0, 30)
-p2Title.BackgroundTransparency = 1
-p2Title.Text = "👥 SERVER TEAM-CHECK METHOD"
-p2Title.TextColor3 = Color3.fromRGB(85, 200, 255)
-p2Title.TextSize = 12
-p2Title.Font = Enum.Font.FredokaOne
-p2Title.Parent = teamCheckPanel
-
-local teamTypeLabel = createStatusLabel("• Active Method: SCANNING...", 38, teamCheckPanel)
+local antiTpLabel = createStatusLabel("• Anti TP: SCANNING...", 28, antiCheatPanel)
+local antiSpeedLabel = createStatusLabel("• Anti Speed: SCANNING...", 48, antiCheatPanel)
+local antiFlyLabel = createStatusLabel("• Anti Fly: SCANNING...", 68, antiCheatPanel)
 
 task.spawn(function()
 	while true do
@@ -600,16 +579,9 @@ task.spawn(function()
 					end
 				end
 			end
-			antiTpLabel.Text = "• Anti TP: " .. (hasAntiTp == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-			antiSpeedLabel.Text = "• Anti Speed: " .. (hasAntiSpeed == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-			antiFlyLabel.Text = "• Anti Fly: " .. (hasAntiFly == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-			antiTpLabel.RichText, antiSpeedLabel.RichText, antiFlyLabel.RichText = true, true, true
-
-			local detMethod = "None / FFA"
-			if #Teams:GetTeams() > 0 then detMethod = "Roblox Team Object"
-			elseif localPlayer:FindFirstChild("leaderstats") then detMethod = "Leaderstats Team" end
-			teamTypeLabel.Text = "• Active Method: <font color='rgb(0,255,255)'>" .. detMethod .. "</font>"
-			teamTypeLabel.RichText = true
+			antiTpLabel.Text = "• Anti TP: " .. hasAntiTp
+			antiSpeedLabel.Text = "• Anti Speed: " .. hasAntiSpeed
+			antiFlyLabel.Text = "• Anti Fly: " .. hasAntiFly
 		end
 		task.wait(2.5)
 	end
@@ -617,52 +589,51 @@ end)
 
 -- --- TAB 5 (SETTINGS) ---
 local settingPage = tabsMemory["Setting"].Page
-
 local settingMainPanel = Instance.new("Frame")
-settingMainPanel.Name = "SettingMainPanel"
-settingMainPanel.Size = UDim2.new(0.92, 0, 0, 220)
-settingMainPanel.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-settingMainPanel.BackgroundTransparency = 0.3
+settingMainPanel.Size = UDim2.new(0.94, 0, 0, 180)
+settingMainPanel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+settingMainPanel.BackgroundTransparency = 0.5
 settingMainPanel.Parent = settingPage
 
 local p5Corner = Instance.new("UICorner")
-p5Corner.CornerRadius = UDim.new(0, 10)
+p5Corner.CornerRadius = UDim.new(0, 6)
 p5Corner.Parent = settingMainPanel
 
 local p5Title = Instance.new("TextLabel")
-p5Title.Size = UDim2.new(1, 0, 0, 30)
+p5Title.Size = UDim2.new(1, 0, 0, 25)
 p5Title.BackgroundTransparency = 1
-p5Title.Text = "⚙️ CONFIGURATION SETTINGS"
-p5Title.TextColor3 = Color3.fromRGB(240, 150, 255)
-p5Title.TextSize = 13
+p5Title.Text = "⚙️ CONFIGURATION"
+p5Title.TextColor3 = textColorWhite 
+p5Title.TextSize = 11
 p5Title.Font = Enum.Font.FredokaOne
 p5Title.Parent = settingMainPanel
 
 local function createSettingInputRow(labelText, placeholder, defaultVal, posY, callback)
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.5, 0, 0, 25)
+	label.Size = UDim2.new(0.55, 0, 0, 22)
 	label.Position = UDim2.new(0.05, 0, 0, posY)
 	label.BackgroundTransparency = 1
 	label.Text = labelText
-	label.TextColor3 = Color3.fromRGB(240, 240, 240)
-	label.TextSize = 11
+	label.TextColor3 = textColorWhite 
+	label.TextSize = 10
 	label.Font = Enum.Font.SourceSansBold
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = settingMainPanel
 
 	local box = Instance.new("TextBox")
-	box.Size = UDim2.new(0.35, 0, 0, 22)
-	box.Position = UDim2.new(0.55, 0, 0, posY + 1)
-	box.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+	box.Size = UDim2.new(0.3, 0, 0, 18)
+	box.Position = UDim2.new(0.65, 0, 0, posY + 1)
+	box.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	box.BackgroundTransparency = 0.8
 	box.Text = tostring(defaultVal)
 	box.PlaceholderText = placeholder
-	box.TextColor3 = Color3.fromRGB(0, 255, 255)
+	box.TextColor3 = textColorWhite 
 	box.Font = Enum.Font.Code
-	box.TextSize = 11
+	box.TextSize = 10
 	box.Parent = settingMainPanel
 
 	local boxCorner = Instance.new("UICorner")
-	boxCorner.CornerRadius = UDim.new(0, 5)
+	boxCorner.CornerRadius = UDim.new(0, 4)
 	boxCorner.Parent = box
 
 	box.FocusLost:Connect(function()
@@ -671,59 +642,115 @@ local function createSettingInputRow(labelText, placeholder, defaultVal, posY, c
 	end)
 end
 
-createSettingInputRow("1. Tốc độ chạy (WalkSpeed):", "Speed...", settingsConfig.SpeedValue, 40, function(val)
+createSettingInputRow("1. WalkSpeed:", "Speed...", settingsConfig.SpeedValue, 35, function(val)
 	settingsConfig.SpeedValue = val
 	if states.Speed and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
 		localPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
 	end
 end)
-createSettingInputRow("2. Lực nhảy (JumpPower):", "Jump...", settingsConfig.JumpValue, 80, function(val)
+createSettingInputRow("2. JumpPower:", "Jump...", settingsConfig.JumpValue, 70, function(val)
 	settingsConfig.JumpValue = val
 	if states.JumpPower and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
 		localPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
 	end
 end)
-createSettingInputRow("3. Kích thước khối Hitbox:", "Size...", settingsConfig.HitboxSizeValue, 120, function(val)
+createSettingInputRow("3. Size Hitbox:", "Size...", settingsConfig.HitboxSizeValue, 105, function(val)
 	settingsConfig.HitboxSizeValue = val triggerESPRefresh()
 end)
-createSettingInputRow("4. Độ trong suốt Hitbox (0-1):", "Trans...", settingsConfig.HitboxTransValue, 160, function(val)
+createSettingInputRow("4. Trans Hitbox (0-1):", "Trans...", settingsConfig.HitboxTransValue, 140, function(val)
 	settingsConfig.HitboxTransValue = (val >= 0 and val <= 1) and val or 0.7 triggerESPRefresh()
 end)
 
 -- ==========================================
--- ĐỒNG BỘ NÚT BẤM KÍCH HOẠT MENU
+-- NÚT KÍCH HOẠT VÀ HIỆU ỨNG ĐẶC BIỆT (FX)
 -- ==========================================
 local menuButton = Instance.new("TextButton")
 menuButton.Name = "BlueSkyToggleBtn"
-menuButton.Size = UDim2.new(0, 50, 0, 50)
+menuButton.Size = UDim2.new(0, 42, 0, 42) 
 menuButton.Position = UDim2.new(0, 20, 0, 120)
 menuButton.BackgroundColor3 = colorSky
-menuButton.Text = "★"
-menuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-menuButton.TextSize = 22
-menuButton.Font = Enum.Font.SourceSansBold
+menuButton.Text = "" -- Bỏ text trực tiếp để dùng nhãn xoay riêng biệt
+menuButton.ClipsDescendants = false
 menuButton.ZIndex = 10
 menuButton.Parent = ScreenGui
 
 makeElementDraggable(menuButton)
 
 local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 10)
+btnCorner.CornerRadius = UDim.new(0, 8)
 btnCorner.Parent = menuButton
 
+-- Viền nút nhấp nháy chuyển màu
 local btnStroke = Instance.new("UIStroke")
-btnStroke.Thickness = 2
-btnStroke.Color = menuBgColor
+btnStroke.Thickness = 1.5
+btnStroke.Color = colorBlue
 btnStroke.Parent = menuButton
 
+-- Nhãn hình ngôi sao để thực hiện hiệu ứng xoay tròn riêng biệt
+local starLabel = Instance.new("TextLabel")
+starLabel.Size = UDim2.new(1, 0, 1, 0)
+starLabel.BackgroundTransparency = 1
+starLabel.Text = "★"
+starLabel.TextColor3 = textColorWhite
+starLabel.TextSize = 18
+starLabel.Font = Enum.Font.SourceSansBold
+starLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+starLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+starLabel.ZIndex = 11
+starLabel.Parent = menuButton
+
+-- --- LOGIC HIỆU ỨNG NHẤP NHÁY VIỀN CHẬM - NHANH XEN KẼ (CHRONO BLINK) ---
+task.spawn(function()
+	while true do
+		-- Chu kỳ 1: Chuyển màu chậm (Nhạt đứng trước đậm sau)
+		local tSlow1 = TweenService:Create(btnStroke, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {Color = colorSky})
+		local tSlow2 = TweenService:Create(menuStroke, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {Color = colorSky})
+		tSlow1:Play() tSlow2:Play() tSlow1.Completed:Wait()
+
+		local tSlow3 = TweenService:Create(btnStroke, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {Color = colorBlue})
+		local tSlow4 = TweenService:Create(menuStroke, TweenInfo.new(1.2, Enum.EasingStyle.Linear), {Color = colorBlue})
+		tSlow3:Play() tSlow4:Play() tSlow3.Completed:Wait()
+
+		-- Chu kỳ 2: Đẩy tốc độ nhanh dồn dập (Chớp nháy nhanh)
+		for i = 1, 2 do
+			local tFast1 = TweenService:Create(btnStroke, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {Color = colorSky})
+			local tFast2 = TweenService:Create(menuStroke, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {Color = colorSky})
+			tFast1:Play() tFast2:Play() tFast1.Completed:Wait()
+
+			local tFast3 = TweenService:Create(btnStroke, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {Color = colorBlue})
+			local tFast4 = TweenService:Create(menuStroke, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {Color = colorBlue})
+			tFast3:Play() tFast4:Play() tFast3.Completed:Wait()
+		end
+	end
+end)
+
+-- --- LOGIC HIỆU ỨNG XOAY NGÔI SAO LIÊN TỤC & HÀO QUANG TOẢ SÁNG ---
 local isMenuOpen = false
+local starRotationAngle = 0
+
+RunService.RenderStepped:Connect(function(deltaTime)
+	if isMenuOpen then
+		starRotationAngle = (starRotationAngle + (120 * deltaTime)) % 360 -- Tốc độ xoay mượt mà
+		starLabel.Rotation = starRotationAngle
+		
+		-- Hiệu ứng co giãn luồng năng lượng phát sáng sau Menu (Pulse Glow Aura)
+		local pulseFactor = 1 + math.sin(tick() * 5) * 0.02
+		menuGlowAura.Size = UDim2.new(1.08 * pulseFactor, 0, 1.1 * pulseFactor, 0)
+	end
+end)
+
 menuButton.MouseButton1Click:Connect(function()
 	isMenuOpen = not isMenuOpen
 	if isMenuOpen then
 		mainMenu.Size = UDim2.new(0, 0, 0, 0)
 		mainMenu.Visible = true
-		TweenService:Create(mainMenu, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 520, 0, 420)}):Play()
+		-- Hiệu ứng bung mở menu ra xung quanh phát sáng
+		TweenService:Create(mainMenu, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 400, 0, 320)}):Play()
 	else
+		-- Ngừng xoay đưa ngôi sao về vị trí cân bằng
+		starLabel.Rotation = 0
+		starRotationAngle = 0
+		
 		local menuTween = TweenService:Create(mainMenu, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
 		menuTween:Play()
 		menuTween.Completed:Connect(function() if not isMenuOpen then mainMenu.Visible = false end end)
