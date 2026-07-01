@@ -1,589 +1,291 @@
--- Khởi tạo settings đầy đủ không bỏ sót
-if not getgenv().BaconSettings then
-    getgenv().BaconSettings = {
-        SpeedToggle=true, InfJump=false, Noclip=false, JumpToggle=false,
-        HitboxAll=false, HitboxTeam=false,
-        ESPAll=false, ESPTeam=false, ESPFriend=false,
-        Speed=30, JumpPower=50, HitboxSize=20, HitboxTransparency=0.7,
-        HealthDisplay=false
-    }
-end
-local settings = getgenv().BaconSettings
+-- ====================================================================
+-- HỆ THỐNG MENU BLUE SKY - THANH TAB TRÁI & KHUNG CUỘN PHẢI
+-- ====================================================================
 
-local player = game.Players.LocalPlayer
-local uis = game:GetService("UserInputService")
-local rs = game:GetService("RunService")
-local players = game:GetService("Players")
-local teams = game:GetService("Teams")
-local tweenService = game:GetService("TweenService")
+local ScreenGui = script.Parent
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
--- GUI chính
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "BaconPremium"
-ScreenGui.ResetOnSpawn = false
+local popTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local fadeTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local colorTweenInfo = TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
--- Icon bật tắt menu (Màu Bluesky)
-local ToggleButton = Instance.new("ImageButton", ScreenGui)
-ToggleButton.Size = UDim2.new(0,50,0,50)
-ToggleButton.Position = UDim2.new(0,20,0,200)
-ToggleButton.Image = "rbxassetid://70487083258184"
-ToggleButton.ImageColor3 = Color3.fromRGB(135, 206, 250)
-ToggleButton.BackgroundTransparency = 1
-ToggleButton.Active = true
-ToggleButton.Draggable = true
+local colorLight = Color3.fromRGB(115, 194, 251) -- Xanh nhạt
+local colorDark = Color3.fromRGB(22, 45, 90)     -- Xanh đậm
 
--- Main Frame
-local MainFrame = Instance.new("Frame", ScreenGui)
-local originalSize = UDim2.new(0, 550, 0, 360)
-local originalPosition = UDim2.new(0.5, -275, 0.5, -180)
-MainFrame.Size = originalSize
-MainFrame.Position = originalPosition
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 35)
-MainFrame.Visible = true
-MainFrame.Active = true
-MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
+-- ==========================================
+-- 1. TẠO MENU CHÍNH (SUPER MAIN MENU)
+-- ==========================================
+local mainMenu = Instance.new("Frame")
+mainMenu.Name = "SuperMainMenu"
+mainMenu.Size = UDim2.new(0.65, 0, 0.7, 0) -- Tăng độ rộng lên một chút để chia đôi bên
+mainMenu.AnchorPoint = Vector2.new(0.5, 0.5)
+mainMenu.Position = UDim2.new(0.5, 0, 0.5, 0) 
+mainMenu.BackgroundColor3 = colorLight
+mainMenu.BorderSizePixel = 0
+mainMenu.ClipsDescendants = true
+mainMenu.Visible = false
+mainMenu.Parent = ScreenGui
 
--- Viền hiệu ứng LED - CHỦ ĐỀ BLUESKY
-local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Thickness = 3
-UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UIStroke.JoinMode = Enum.LineJoinMode.Round
+local menuCorner = Instance.new("UICorner")
+menuCorner.CornerRadius = UDim.new(0, 20)
+menuCorner.Parent = mainMenu
 
-local UIGradient = Instance.new("UIGradient", UIStroke)
-local neonSequence = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(135, 206, 250)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 144, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 206, 250))
-})
-UIGradient.Color = neonSequence
+local menuStroke = Instance.new("UIStroke")
+menuStroke.Color = Color3.fromRGB(255, 255, 255)
+menuStroke.Transparency = 0.5
+menuStroke.Thickness = 3
+menuStroke.Parent = mainMenu
 
--- Top Bar
-local TopBar = Instance.new("Frame", MainFrame)
-TopBar.Size = UDim2.new(1, 0, 0, 35)
-TopBar.Position = UDim2.new(0, 0, 0, 0)
-TopBar.BackgroundTransparency = 1
+-- Tiêu đề Menu
+local menuTitle = Instance.new("TextLabel")
+menuTitle.Size = UDim2.new(1, 0, 0, 60)
+menuTitle.BackgroundTransparency = 1
+menuTitle.Text = "AETHER SKY INTERFACE"
+menuTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+menuTitle.TextSize = 26
+menuTitle.Font = Enum.Font.FredokaOne
+menuTitle.ZIndex = 5
+menuTitle.Parent = mainMenu
 
-local TitleLabel = Instance.new("TextLabel", TopBar)
-TitleLabel.Size = UDim2.new(1, 0, 1, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "VUHUB PREMIUM [BLUESKY EDITION]"
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.TextSize = 14
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+-- ==========================================
+-- 2. CHIA BỐ CỤC: TAB TRÁI & NỘI DUNG PHẢI
+-- ==========================================
 
-local TextGradient = Instance.new("UIGradient", TitleLabel)
-TextGradient.Color = neonSequence
+-- A. THANH TAB BÊN TRÁI (Left Tab Bar)
+local leftTabBar = Instance.new("Frame")
+leftTabBar.Name = "LeftTabBar"
+leftTabBar.Size = UDim2.new(0.25, 0, 1, -70) -- Chiếm 25% chiều rộng menu
+leftTabBar.Position = UDim2.new(0, 15, 0, 60)
+leftTabBar.BackgroundTransparency = 0.7
+leftTabBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+leftTabBar.BorderSizePixel = 0
+leftTabBar.ZIndex = 4
+leftTabBar.Parent = mainMenu
 
--- Thanh Tab dọc bên trái
-local TabScroll = Instance.new("ScrollingFrame", MainFrame)
-TabScroll.Size = UDim2.new(0, 125, 1, -50)
-TabScroll.Position = UDim2.new(0, 10, 0, 40)
-TabScroll.BackgroundColor3 = Color3.fromRGB(24, 34, 46)
-TabScroll.CanvasSize = UDim2.new(0, 0, 0, 220)
-TabScroll.ScrollBarThickness = 2
-TabScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
-TabScroll.ZIndex = 5
-Instance.new("UICorner", TabScroll).CornerRadius = UDim.new(0,8)
+local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0, 12)
+tabCorner.Parent = leftTabBar
 
-local UIListLayout = Instance.new("UIListLayout", TabScroll)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 6)
+-- Tự động sắp xếp các nút Tab theo chiều dọc từ trên xuống
+local tabListLayout = Instance.new("UIListLayout")
+tabListLayout.Padding = UDim.new(0, 10)
+tabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+tabListLayout.Parent = leftTabBar
 
--- Hiệu ứng LED chạy
-local offsetCounter = 0
-rs.RenderStepped:Connect(function()
-    if MainFrame.Visible then
-        UIGradient.Rotation = (UIGradient.Rotation + 1) % 360
-        TextGradient.Rotation = (TextGradient.Rotation + 1) % 360
-        offsetCounter = (offsetCounter + 0.01) % 1
-        UIGradient.Offset = Vector2.new(offsetCounter, 0)
-        TextGradient.Offset = Vector2.new(-offsetCounter, 0)
-    end
+-- Thêm một chút khoảng cách đệm phía trên thanh Tab
+local tabPadding = Instance.new("UIPadding")
+tabPadding.PaddingTop = UDim.new(0, 10)
+tabPadding.Parent = leftTabBar
+
+
+-- B. PHẦN TAB BÊN PHẢI CÓ THANH CUỘN VÔ HẠN (Right Scrolling Frame)
+local rightScrollFrame = Instance.new("ScrollingFrame")
+rightScrollFrame.Name = "RightScrollFrame"
+rightScrollFrame.Size = UDim2.new(0.7, 0, 1, -70) -- Chiếm 70% chiều rộng menu
+rightScrollFrame.Position = UDim2.new(0.28, 0, 0, 60)
+rightScrollFrame.BackgroundTransparency = 0.8
+rightScrollFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+rightScrollFrame.BorderSizePixel = 0
+rightScrollFrame.ZIndex = 4
+rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Sẽ tự động tăng kích thước vô hạn dựa vào item
+rightScrollFrame.ScrollBarThickness = 6
+rightScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+rightScrollFrame.Parent = mainMenu
+
+local scrollCorner = Instance.new("UICorner")
+scrollCorner.CornerRadius = UDim.new(0, 12)
+scrollCorner.Parent = rightScrollFrame
+
+-- Tự động sắp xếp các ô vật phẩm bên trong danh sách cuộn (Dạng lưới Grid)
+local gridLayout = Instance.new("UIGridLayout")
+gridLayout.CellSize = UDim2.new(0, 90, 0, 90) -- Mỗi ô vuông vật phẩm kích thước 90x90
+gridLayout.CellPadding = UDim2.new(0, 12, 0, 12)
+gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+gridLayout.Parent = rightScrollFrame
+
+local scrollPadding = Instance.new("UIPadding")
+scrollPadding.PaddingTop = UDim.new(0, 12)
+scrollPadding.PaddingLeft = UDim.new(0, 12)
+scrollPadding.Parent = rightScrollFrame
+
+-- HÀM TỰ ĐỘNG CẬP NHẬT ĐỘ DÀI CUỘN VÔ HẠN (Automatic Canvas Resize)
+gridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 24)
 end)
 
--- Đóng mở Menu
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+-- ==========================================
+-- 3. ĐIỀN DỮ LIỆU MẪU (TABS & ITEMS)
+-- ==========================================
+
+-- Tạo 3 nút Tab ví dụ ở bên trái
+local tabs = {"Cửa Hàng", "Kho Đồ", "Cài Đặt"}
+for i, tabName in ipairs(tabs) do
+	local tabBtn = Instance.new("TextButton")
+	tabBtn.Size = UDim2.new(0.9, 0, 0, 40)
+	tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.BackgroundTransparency = 0.9
+	tabBtn.Text = tabName
+	tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tabBtn.Font = Enum.Font.SourceSansBold
+	tabBtn.TextSize = 16
+	tabBtn.ZIndex = 5
+	tabBtn.Parent = leftTabBar
+	
+	local btnCor = Instance.new("UICorner")
+	btnCor.CornerRadius = UDim.new(0, 8)
+	btnCor.Parent = tabBtn
+end
+
+-- Thử tạo hàng loạt ô vật phẩm (Vòng lặp tạo hẳn 30 ô để test thanh cuộn vô hạn)
+for i = 1, 30 do
+	local itemBox = Instance.new("Frame")
+	itemBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	itemBox.BackgroundTransparency = 0.8
+	itemBox.ZIndex = 5
+	itemBox.Parent = rightScrollFrame
+	
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.CornerRadius = UDim.new(0, 8)
+	boxCorner.Parent = itemBox
+	
+	local itemLabel = Instance.new("TextLabel")
+	itemLabel.Size = UDim2.new(1, 0, 1, 0)
+	itemLabel.BackgroundTransparency = 1
+	itemLabel.Text = "Item " .. i
+	itemLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	itemLabel.Font = Enum.Font.SourceSans
+	itemLabel.TextSize = 14
+	itemLabel.ZIndex = 6
+	itemLabel.Parent = itemBox
+end
+
+-- ==========================================
+-- 4. HỆ THỐNG MÂY TRÔI (BACKGROUND)
+-- ==========================================
+local cloudContainer = Instance.new("Frame")
+cloudContainer.Size = UDim2.new(1, 0, 1, 0)
+cloudContainer.BackgroundTransparency = 1
+cloudContainer.ZIndex = 2
+cloudContainer.Parent = mainMenu
+
+local function createCloud(size, startY, speed)
+	local cloud = Instance.new("Frame")
+	cloud.Size = size
+	cloud.Position = UDim2.new(-0.3, 0, startY, 0)
+	cloud.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	cloud.BackgroundTransparency = 0.65
+	cloud.BorderSizePixel = 0
+	cloud.ZIndex = 2
+	cloud.Parent = cloudContainer
+
+	local cloudCorner = Instance.new("UICorner")
+	cloudCorner.CornerRadius = UDim.new(0.5, 0)
+	cloudCorner.Parent = cloud
+
+	task.spawn(function()
+		while true do
+			cloud.Position = UDim2.new(-0.3, 0, startY, 0)
+			local moveTween = TweenService:Create(cloud, TweenInfo.new(speed, Enum.EasingStyle.Linear), {
+				Position = UDim2.new(1.2, 0, startY, 0)
+			})
+			moveTween:Play()
+			moveTween.Completed:Wait()
+		end
+	end)
+end
+
+createCloud(UDim2.new(0, 180, 0, 60), 0.1, 20)
+createCloud(UDim2.new(0, 250, 0, 80), 0.4, 28)
+
+-- ==========================================
+-- 5. TẠO NÚT BẤM VUÔNG CÓ VIỀN ĐỔI MÀU
+-- ==========================================
+local menuButton = Instance.new("TextButton")
+menuButton.Name = "BlueSkyMenuBtn"
+menuButton.Size = UDim2.new(0, 60, 0, 60)
+menuButton.Position = UDim2.new(0, 20, 0, 20)
+menuButton.BackgroundColor3 = colorLight
+menuButton.Text = "☰"
+menuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+menuButton.TextSize = 30
+menuButton.Font = Enum.Font.SourceSansBold
+menuButton.ZIndex = 10
+menuButton.Parent = ScreenGui
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 12)
+btnCorner.Parent = menuButton
+
+local btnStroke = Instance.new("UIStroke")
+btnStroke.Thickness = 3
+btnStroke.Color = colorDark
+btnStroke.Parent = menuButton
+
+-- ==========================================
+-- 6. ĐỒNG BỘ ĐỔI MÀU & HIỆU ỨNG BỒNG BỀNH
+-- ==========================================
+task.spawn(function()
+	while true do
+		local t1 = TweenService:Create(mainMenu, colorTweenInfo, {BackgroundColor3 = colorDark})
+		local t2 = TweenService:Create(menuButton, colorTweenInfo, {BackgroundColor3 = colorDark})
+		local t3 = TweenService:Create(btnStroke, colorTweenInfo, {Color = colorLight})
+		t1:Play() t2:Play() t3:Play() t1.Completed:Wait()
+		
+		local t4 = TweenService:Create(mainMenu, colorTweenInfo, {BackgroundColor3 = colorLight})
+		local t5 = TweenService:Create(menuButton, colorTweenInfo, {BackgroundColor3 = colorLight})
+		local t6 = TweenService:Create(btnStroke, colorTweenInfo, {Color = colorDark})
+		t4:Play() t5:Play() t6:Play() t4.Completed:Wait()
+	end
 end)
 
--- Tạo các vùng chứa nội dung Tab
-local Tabs = {}
-local function createTab(name)
-    local tab = Instance.new("Frame")
-    tab.Size = UDim2.new(1, -155, 1, -50)
-    tab.Position = UDim2.new(0, 145, 0, 40)
-    tab.BackgroundTransparency = 1
-    tab.Name = name
-    tab.ZIndex = 3
-    tab.Visible = false
-    tab.Parent = MainFrame
-    Tabs[name] = tab
+local isMenuOpen = false
+local basePosition = UDim2.new(0.5, 0, 0.5, 0)
+local bobbingConnection
+
+local function startBobbing()
+	if bobbingConnection then bobbingConnection:Disconnect() end
+	local startTime = os.clock()
+	bobbingConnection = RunService.RenderStepped:Connect(function()
+		if isMenuOpen then
+			local offset = math.sin((os.clock() - startTime) * 2) * 12
+			mainMenu.Position = UDim2.new(0.5, 0, 0.5, offset)
+		end
+	end)
 end
 
-createTab("Main")
-createTab("Vision")
-createTab("Script")
-createTab("Hack Game")
-createTab("Setting")
-
-local function showTab(name)
-    for n,f in pairs(Tabs) do 
-        f.Visible = (n == name) 
-    end
-    for _,btn in pairs(TabScroll:GetChildren()) do
-        if btn:IsA("TextButton") then
-            if btn.Text == name then
-                btn.BackgroundColor3 = Color3.fromRGB(35, 55, 75)
-                btn.TextColor3 = Color3.fromRGB(135, 206, 250)
-            else
-                btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
-                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            end
-        end
-    end
+local function stopBobbing()
+	if bobbingConnection then bobbingConnection:Disconnect() bobbingConnection = nil end
 end
 
-local function addTabButton(name, order)
-    local btn = Instance.new("TextButton", TabScroll)
-    btn.Size = UDim2.new(1, 0, 0, 34)
-    btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Text = name
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 11
-    btn.LayoutOrder = order
-    btn.ZIndex = 6
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-    btn.MouseButton1Click:Connect(function() showTab(name) end)
-end
-
-addTabButton("Main", 1)
-addTabButton("Vision", 2)
-addTabButton("Script", 3)
-addTabButton("Hack Game", 4)
-addTabButton("Setting", 5)
-
--- Hiển thị Tab mặc định ngay lập tức
-showTab("Main")
-
--- Tạo nội dung trống cho tab Main
-local MainLabel = Instance.new("TextLabel", Tabs["Main"])
-MainLabel.Size = UDim2.new(1,0,1,0)
-MainLabel.BackgroundTransparency = 1
-MainLabel.Text = "Chào mừng bạn đến với Vuhub Premium!\nChọn các Tab bên trái để hack game."
-MainLabel.Font = Enum.Font.GothamSemibold
-MainLabel.TextColor3 = Color3.fromRGB(255,255,255)
-MainLabel.TextSize = 13
-MainLabel.ZIndex = 4
-
--- Toggle Helper
-local function createToggleButton(parent,text,y,settingKey,callback)
-    local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(1,-10,0,32)
-    btn.Position = UDim2.new(0,5,0,y)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 43, 60)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 12
-    btn.ZIndex = parent.ZIndex + 1
-    btn.Text = text.." : "..(settings[settingKey] and "ON" or "OFF")
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-    
-    local tStroke = Instance.new("UIStroke", btn)
-    tStroke.Color = Color3.fromRGB(135, 206, 250)
-    tStroke.Thickness = 1
-    tStroke.Transparency = settings[settingKey] and 0 or 0.5
-
-    btn.MouseButton1Click:Connect(function()
-        settings[settingKey] = not settings[settingKey]
-        btn.Text = text.." : "..(settings[settingKey] and "ON" or "OFF")
-        btn.TextColor3 = settings[settingKey] and Color3.fromRGB(135,206,250) or Color3.fromRGB(255,255,255)
-        tStroke.Transparency = settings[settingKey] and 0 or 0.5
-        callback(settings[settingKey])
-    end)
-
-    if settings[settingKey] then
-        callback(true)
-        btn.Text = text.." : ON"
-        btn.TextColor3 = Color3.fromRGB(135,206,250)
-    end
-    return btn
-end
-
--------------------------------------------------
--- TAB HACK GAME
-local HackGameScroll = Instance.new("ScrollingFrame", Tabs["Hack Game"])
-HackGameScroll.Size = UDim2.new(1, 0, 1, 0)
-HackGameScroll.BackgroundTransparency = 1
-HackGameScroll.CanvasSize = UDim2.new(0, 0, 0, 520)
-HackGameScroll.ScrollBarThickness = 3
-HackGameScroll.ZIndex = 3
-HackGameScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
-
--- BẢNG 1: CHECK TEAM
-local TeamStatusFrame = Instance.new("Frame", HackGameScroll)
-TeamStatusFrame.Size = UDim2.new(1, -10, 0, 150)
-TeamStatusFrame.Position = UDim2.new(0, 5, 0, 5)
-TeamStatusFrame.BackgroundColor3 = Color3.fromRGB(20, 32, 46)
-TeamStatusFrame.ZIndex = 4
-Instance.new("UICorner", TeamStatusFrame).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", TeamStatusFrame).Color = Color3.fromRGB(135, 206, 250)
-
-local TeamTitle = Instance.new("TextLabel", TeamStatusFrame)
-TeamTitle.Size = UDim2.new(1, 0, 0, 22)
-TeamTitle.BackgroundTransparency = 1
-TeamTitle.Text = "🔍 PHÂN TÍCH HỆ THỐNG TEAM CỦA GAME"
-TeamTitle.Font = Enum.Font.GothamBold
-TeamTitle.TextSize = 11
-TeamTitle.TextColor3 = Color3.fromRGB(135, 206, 250)
-TeamTitle.ZIndex = 4
-
-local TeamContainer = Instance.new("Frame", TeamStatusFrame)
-TeamContainer.Size = UDim2.new(1, -10, 1, -25)
-TeamContainer.Position = UDim2.new(0, 5, 0, 24)
-TeamContainer.BackgroundTransparency = 1
-TeamContainer.ZIndex = 4
-local TeamListLayout = Instance.new("UIListLayout", TeamContainer) TeamListLayout.Padding = UDim.new(0, 1)
-
-local teamLabels = {}
-local function makeTeamLabel(key, text)
-    local lbl = Instance.new("TextLabel", TeamContainer)
-    lbl.Size = UDim2.new(1, 0, 0, 13)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = "• " .. text .. ": ❌ No"
-    lbl.Font = Enum.Font.GothamSemibold
-    lbl.TextSize = 10
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.ZIndex = 4
-    teamLabels[key] = {obj = lbl, text = text}
-end
-
-makeTeamLabel("Auto", "AutoAssignable System")
-makeTeamLabel("Spawn", "SpawnLocation Touch")
-makeTeamLabel("UI", "ScreenGui Choice")
-makeTeamLabel("Random", "Random Server Script")
-makeTeamLabel("Balanced", "Balanced Server Script")
-makeTeamLabel("Gated", "VIP / Level Gated Script")
-makeTeamLabel("Attr", "Virtual Team via Attributes")
-makeTeamLabel("Tag", "Virtual Team via Tags")
-makeTeamLabel("Money", "Monetized Team (Gamepass)")
-
--- BẢNG 2: CHECK ANTI-CHEAT
-local AntiStatusFrame = Instance.new("Frame", HackGameScroll)
-AntiStatusFrame.Size = UDim2.new(1, -10, 0, 120)
-AntiStatusFrame.Position = UDim2.new(0, 5, 0, 165)
-AntiStatusFrame.BackgroundColor3 = Color3.fromRGB(20, 32, 46)
-AntiStatusFrame.ZIndex = 4
-Instance.new("UICorner", AntiStatusFrame).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", AntiStatusFrame).Color = Color3.fromRGB(135, 206, 250)
-
-local AntiTitle = Instance.new("TextLabel", AntiStatusFrame)
-AntiTitle.Size = UDim2.new(1, 0, 0, 22)
-AntiTitle.BackgroundTransparency = 1
-AntiTitle.Text = "🛡️ HỆ THỐNG KIỂM TRA ANTI-CHEAT"
-AntiTitle.Font = Enum.Font.GothamBold
-AntiTitle.TextSize = 11
-AntiTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
-AntiTitle.ZIndex = 4
-
-local AntiContainer = Instance.new("Frame", AntiStatusFrame)
-AntiContainer.Size = UDim2.new(1, -10, 1, -25)
-AntiContainer.Position = UDim2.new(0, 5, 0, 24)
-AntiContainer.BackgroundTransparency = 1
-AntiContainer.ZIndex = 4
-local AntiListLayout = Instance.new("UIListLayout", AntiContainer) AntiListLayout.Padding = UDim.new(0, 1)
-
-local antiLabels = {}
-local function makeAntiLabel(key, text)
-    local lbl = Instance.new("TextLabel", AntiContainer)
-    lbl.Size = UDim2.new(1, 0, 0, 13)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = "• " .. text .. ": Safe"
-    lbl.Font = Enum.Font.GothamSemibold
-    lbl.TextSize = 10
-    lbl.TextColor3 = Color3.fromRGB(150, 200, 150)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.ZIndex = 4
-    antiLabels[key] = {obj = lbl, text = text}
-end
-
-makeAntiLabel("Adonis", "Adonis Admin / Anti-Cheat")
-makeAntiLabel("Valkyrie", "Valkyrie / Vanguard Flag")
-makeAntiLabel("Memory", "WalkSpeed / JumpPower Memory Check")
-makeAntiLabel("Humanoid", "Humanoid Property State Check")
-makeAntiLabel("Remote", "RemoteEvent Spam & Ban Protection")
-makeAntiLabel("Byfron", "Hyperion / Byfron Client Engine")
-
--- Logic Quét
-local function MasterScanner()
-    local detects = { Auto = false, Spawn = false, UI = false, Random = false, Balanced = false, Gated = false, Attr = false, Tag = false, Money = false }
-    for _, t in pairs(teams:GetTeams()) do
-        if t.AutoAssignable then detects.Auto = true end
-        if string.find(string.lower(t.Name), "vip") or string.find(string.lower(t.Name), "pass") then detects.Money = true end
-    end
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("SpawnLocation") and obj.AllowTeamChangeOnTouch then detects.Spawn = true break end
-    end
-    local pGui = player:FindFirstChild("PlayerGui")
-    if pGui then
-        for _, gui in pairs(pGui:GetDescendants()) do
-            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
-                local n = string.lower(gui.Name)
-                if string.find(n, "team") or string.find(n, "choose") then detects.UI = true break end
-            end
-        end
-    end
-    for _, p in pairs(players:GetPlayers()) do
-        if p:GetAttribute("Team") or p:GetAttribute("Role") then detects.Attr = true end
-        if p:FindFirstChild("leaderstats") and p.leaderstats:FindFirstChild("Level") then detects.Gated = true end
-    end
-    
-    for key, state in pairs(detects) do
-        local labelData = teamLabels[key]
-        if labelData then
-            if state then labelData.obj.Text = "• " .. labelData.text .. ": Yes" labelData.obj.TextColor3 = Color3.fromRGB(135, 206, 250)
-            else labelData.obj.Text = "• " .. labelData.text .. ": ❌ No" labelData.obj.TextColor3 = Color3.fromRGB(255, 255, 255) end
-        end
-    end
-
-    local antis = { Adonis = false, Valkyrie = false, Memory = false, Humanoid = false, Remote = false, Byfron = true }
-    for _, item in pairs(game:GetDescendants()) do
-        if item:IsA("RemoteEvent") or item:IsA("RemoteFunction") then
-            local name = string.lower(item.Name)
-            if string.find(name, "adonis") then antis.Adonis = true end
-            if string.find(name, "vanguard") or string.find(name, "ac") then antis.Valkyrie = true end
-        end
-    end
-    
-    for key, state in pairs(antis) do
-        local labelData = antiLabels[key]
-        if labelData then
-            if state then labelData.obj.Text = "• " .. labelData.text .. ": ⚠️ Yes (Found)" labelData.obj.TextColor3 = Color3.fromRGB(255, 75, 75)
-            else labelData.obj.Text = "• " .. labelData.text .. ": Safe" labelData.obj.TextColor3 = Color3.fromRGB(150, 200, 150) end
-        end
-    end
-end
-
-task.spawn(function() while task.wait(3) do if Tabs["Hack Game"].Visible then MasterScanner() end end end)
-MasterScanner()
-
--- Các nút Hack
-createToggleButton(HackGameScroll,"Speed",295,"SpeedToggle",function(on)
-    if on then
-        if not getgenv().SpeedConn then
-            getgenv().SpeedConn = rs.Stepped:Connect(function()
-                if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = settings.Speed end
-            end)
-        end
-    else
-        if getgenv().SpeedConn then getgenv().SpeedConn:Disconnect() getgenv().SpeedConn=nil end
-        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = 16 end
-    end
-end)
-
-createToggleButton(HackGameScroll,"JumpPower",335,"JumpToggle",function(on)
-    if on then
-        if not getgenv().JumpConn then
-            getgenv().JumpConn = rs.Stepped:Connect(function()
-                if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.UseJumpPower = true player.Character.Humanoid.JumpPower = settings.JumpPower end
-            end)
-        end
-    else
-        if getgenv().JumpConn then getgenv().JumpConn:Disconnect() getgenv().JumpConn=nil end
-        if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.JumpPower = 50 end
-    end
-end)
-
-createToggleButton(HackGameScroll,"InfJump",375,"InfJump",function(on)
-    if on then
-        if not getgenv().InfJumpConn then
-            getgenv().InfJumpConn = uis.JumpRequest:Connect(function()
-                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping") end
-            end)
-        end
-    else
-        if getgenv().InfJumpConn then getgenv().InfJumpConn:Disconnect() getgenv().InfJumpConn=nil end
-    end
-end)
-
-createToggleButton(HackGameScroll,"Noclip",415,"Noclip",function(on)
-    if on then
-        if not getgenv().NoclipConn then
-            getgenv().NoclipConn = rs.Stepped:Connect(function()
-                if player.Character then for _,v in pairs(player.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
-            end)
-        end
-    else
-        if getgenv().NoclipConn then getgenv().NoclipConn:Disconnect() getgenv().NoclipConn=nil end
-    end
-end)
-
--------------------------------------------------
--- TAB VISION
-local function applyHitboxReal(p, teamCheck)
-    if p == player or not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
-    if teamCheck and p.Team == player.Team then return end
-    local hrp = p.Character.HumanoidRootPart
-    hrp.Size = Vector3.new(settings.HitboxSize, settings.HitboxSize, settings.HitboxSize)
-    hrp.Transparency = settings.HitboxTransparency
-    hrp.Material = Enum.Material.Neon
-    hrp.Color = Color3.fromRGB(135,206,235)
-end
-
-local function resetHitboxReal(p)
-    if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
-    p.Character.HumanoidRootPart.Size = Vector3.new(2,2,1)
-    p.Character.HumanoidRootPart.Transparency = 1
-end
-
-local function getHealthColor(hp)
-    if hp >= 80 then return Color3.fromRGB(0, 255, 0)
-    elseif hp > 30 then return Color3.fromRGB(255, 255, 0)
-    else return Color3.fromRGB(255, 0, 0) end
-end
-
-local function createHealthBar(p)
-    if p == player or not p.Character or p.Character:FindFirstChild("BaconHealthBar") then return end
-    local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-    
-    local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Name = "BaconHealthBar"
-    billboardGui.Size = UDim2.new(8, 0, 1, 0)
-    billboardGui.StudsOffset = Vector3.new(0, 5, 0)
-    billboardGui.MaxDistance = math.huge
-    billboardGui.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
-    billboardGui.Parent = p.Character
-    
-    local container = Instance.new("Frame", billboardGui)
-    container.Size = UDim2.new(1, 0, 1, 0)
-    container.BackgroundTransparency = 0.3
-    container.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    
-    local healthBar = Instance.new("Frame", container)
-    healthBar.Name = "HealthBar"
-    healthBar.Size = UDim2.new(1, -4, 1, -4)
-    healthBar.Position = UDim2.new(0, 2, 0, 2)
-    healthBar.BackgroundColor3 = getHealthColor(humanoid.Health)
-    
-    humanoid.HealthChanged:Connect(function(newHealth)
-        local ratio = math.max(0, math.min(1, newHealth / humanoid.MaxHealth))
-        healthBar.Size = UDim2.new(ratio, -4, 1, -4)
-        healthBar.BackgroundColor3 = getHealthColor(newHealth)
-    end)
-end
-
-local function removeHealthBar(p)
-    if p.Character and p.Character:FindFirstChild("BaconHealthBar") then p.Character.BaconHealthBar:Destroy() end
-end
-
-local function applyESP(p, teamCheck)
-    if p == player or not p.Character then return end
-    if teamCheck and p.Team == player.Team then return end
-    local isFriend = player:IsFriendsWith(p.UserId)
-    local finalColor = Color3.fromRGB(135,206,250)
-    if settings.ESPFriend and isFriend then finalColor = Color3.fromRGB(0, 255, 128) end
-
-    local hl = p.Character:FindFirstChild("BaconESP") or Instance.new("Highlight", p.Character)
-    hl.Name = "BaconESP" hl.FillTransparency = 1 hl.OutlineTransparency = 0 hl.OutlineColor = finalColor
-
-    if settings.ESPFriend and isFriend then
-        if not p.Character:FindFirstChild("FriendNameTag") then
-            local tag = Instance.new("BillboardGui", p.Character)
-            tag.Name = "FriendNameTag" tag.Size = UDim2.new(0, 200, 0, 50) tag.StudsOffset = Vector3.new(0, 6.5, 0) tag.AlwaysOnTop = true
-            tag.Adornee = p.Character:FindFirstChild("HumanoidRootPart")
-            local tl = Instance.new("TextLabel", tag)
-            tl.Size = UDim2.new(1, 0, 1, 0) tl.BackgroundTransparency = 1 tl.Text = "[FRIEND] " .. p.DisplayName
-            tl.TextColor3 = Color3.fromRGB(0, 255, 128) tl.Font = Enum.Font.GothamBold tl.TextSize = 14
-        end
-    else
-        if p.Character:FindFirstChild("FriendNameTag") then p.Character.FriendNameTag:Destroy() end
-    end
-    if settings.HealthDisplay then createHealthBar(p) end
-end
-
-local function resetESP(p)
-    if p.Character and p.Character:FindFirstChild("BaconESP") then p.Character.BaconESP:Destroy() end
-    if p.Character and p.Character:FindFirstChild("FriendNameTag") then p.Character.FriendNameTag:Destroy() end
-    removeHealthBar(p)
-end
-
-createToggleButton(Tabs["Vision"],"Hitbox All",10,"HitboxAll",function(on) if on then settings.HitboxTeam = false end end)
-createToggleButton(Tabs["Vision"],"Hitbox Team",50,"HitboxTeam",function(on) if on then settings.HitboxAll = false end end)
-createToggleButton(Tabs["Vision"],"ESP All",90,"ESPAll",function() end)
-createToggleButton(Tabs["Vision"],"ESP Team",130,"ESPTeam",function() end)
-createToggleButton(Tabs["Vision"],"ESP Friend",170,"ESPFriend",function() end)
-
-rs.Heartbeat:Connect(function()
-    for _, p in pairs(players:GetPlayers()) do
-        if p ~= player and p.Character then
-            if settings.HitboxAll then applyHitboxReal(p, false) elseif settings.HitboxTeam then applyHitboxReal(p, true) else resetHitboxReal(p) end
-            if settings.ESPAll then applyESP(p, false) elseif settings.ESPTeam then applyESP(p, true) elseif settings.ESPFriend and player:IsFriendsWith(p.UserId) then applyESP(p, false) else resetESP(p) end
-        end
-    end
-end)
-
--------------------------------------------------
--- TAB SCRIPT
-local ScriptScroll = Instance.new("ScrollingFrame", Tabs["Script"])
-ScriptScroll.Size = UDim2.new(1,0,1,0)
-ScriptScroll.CanvasSize = UDim2.new(0,0,0,450)
-ScriptScroll.ScrollBarThickness = 3
-ScriptScroll.BackgroundTransparency = 1
-ScriptScroll.ZIndex = 3
-local sLayout = Instance.new("UIListLayout", ScriptScroll) sLayout.Padding = UDim.new(0,5)
-
-local function addScriptButton(name, url)
-    local btn = Instance.new("TextButton", ScriptScroll)
-    btn.Size = UDim2.new(1, -10, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.ZIndex = 4
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-    Instance.new("UIStroke", btn).Color = Color3.fromRGB(135, 206, 250)
-    btn.MouseButton1Click:Connect(function() loadstring(game:HttpGet(url))() end)
-end
-
-addScriptButton("FlyGui", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/flyvukkhub")
-addScriptButton("buildandsteal", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
-addScriptButton("Aimbotvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
-addScriptButton("tpvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
-addScriptButton("floatvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
-addScriptButton("adminhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
-addScriptButton("afkvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
-addScriptButton("ma", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
-addScriptButton("blox fruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
-addScriptButton("benh vien", "https://airflowscript.com/loader")
-
--------------------------------------------------
--- TAB SETTING
-local SettingScroll = Instance.new("ScrollingFrame", Tabs["Setting"])
-SettingScroll.Size = UDim2.new(1,0,1,0)
-SettingScroll.CanvasSize = UDim2.new(0,0,0,320)
-SettingScroll.BackgroundTransparency = 1
-SettingScroll.ZIndex = 3
-
-local function createTextBox(placeholder, y, defaultText, callback)
-    local box = Instance.new("TextBox", SettingScroll)
-    box.Size = UDim2.new(1,-10,0,30)
-    box.Position = UDim2.new(0,5,0,y)
-    box.PlaceholderText = placeholder box.Text = defaultText
-    box.BackgroundColor3 = Color3.fromRGB(24, 38, 53) box.TextColor3 = Color3.fromRGB(255,255,255)
-    box.ZIndex = 4
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
-    Instance.new("UIStroke", box).Color = Color3.fromRGB(135, 206, 250)
-    box.FocusLost:Connect(function() callback(box) end)
-end
-
-createTextBox("Speed Value", 10, tostring(settings.Speed), function(box) settings.Speed = tonumber(box.Text) or 30 end)
-createTextBox("JumpPower Value", 50, tostring(settings.JumpPower), function(box) settings.JumpPower = tonumber(box.Text) or 50 end)
-createTextBox("Hitbox Size", 90, tostring(settings.HitboxSize), function(box) settings.HitboxSize = tonumber(box.Text) or 20 end)
-createTextBox("Hitbox Transparency (0-1)", 130, tostring(settings.HitboxTransparency), function(box) settings.HitboxTransparency = tonumber(box.Text) or 0.7 end)
-
-createToggleButton(SettingScroll,"Health Display",175,"HealthDisplay",function(on)
-    if not on then for _, p in pairs(players:GetPlayers()) do removeHealthBar(p) end end
+-- Thao tác click Bật/Tắt
+menuButton.MouseButton1Click:Connect(function()
+	isMenuOpen = not isMenuOpen
+	
+	-- Hiệu ứng co giãn nút vuông khi nhấn
+	TweenService:Create(menuButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 52, 0, 52)}):Play()
+	task.delay(0.1, function()
+		TweenService:Create(menuButton, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+	end)
+	
+	if isMenuOpen then
+		mainMenu.Size = UDim2.new(0, 0, 0, 0)
+		mainMenu.Position = basePosition
+		mainMenu.Visible = true
+		
+		local menuTween = TweenService:Create(mainMenu, popTweenInfo, {Size = UDim2.new(0.65, 0, 0.7, 0)})
+		menuTween:Play()
+		menuTween.Completed:Connect(function()
+			if isMenuOpen then startBobbing() end
+		end)
+	else
+		stopBobbing()
+		local menuTween = TweenService:Create(mainMenu, fadeTweenInfo, {Size = UDim2.new(0, 0, 0, 0), Position = basePosition})
+		menuTween:Play()
+		menuTween.Completed:Connect(function()
+			if not isMenuOpen then mainMenu.Visible = false end
+		end)
+	end
 end)
