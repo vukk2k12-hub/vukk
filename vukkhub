@@ -16,10 +16,6 @@ local rs = game:GetService("RunService")
 local players = game:GetService("Players")
 local teams = game:GetService("Teams")
 local tweenService = game:GetService("TweenService")
-local collectionService = game:GetService("CollectionService")
-
--- Cache để tránh lag
-local playerCache = {}
 
 -- GUI chính
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
@@ -36,7 +32,7 @@ ToggleButton.BackgroundTransparency = 1
 ToggleButton.Active = true
 ToggleButton.Draggable = true
 
--- Main Frame (Kích thước lớn chuẩn Bluesky)
+-- Main Frame
 local MainFrame = Instance.new("Frame", ScreenGui)
 local originalSize = UDim2.new(0, 550, 0, 360)
 local originalPosition = UDim2.new(0.5, -275, 0.5, -180)
@@ -46,7 +42,6 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 35)
 MainFrame.Visible = true
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = false 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
 
 -- Viền hiệu ứng LED - CHỦ ĐỀ BLUESKY
@@ -71,23 +66,21 @@ TopBar.BackgroundTransparency = 1
 
 local TitleLabel = Instance.new("TextLabel", TopBar)
 TitleLabel.Size = UDim2.new(1, 0, 1, 0)
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.Text = "VUHUB PREMIUM [BLUESKY EDITION]"
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 14
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 local TextGradient = Instance.new("UIGradient", TitleLabel)
 TextGradient.Color = neonSequence
 
--- Thanh Tab dọc bên trái (Được gán ZIndex cao để không bị đè mất)
+-- Thanh Tab dọc bên trái
 local TabScroll = Instance.new("ScrollingFrame", MainFrame)
-TabScroll.Size = UDim2.new(0, 125, 1, -45)
+TabScroll.Size = UDim2.new(0, 125, 1, -50)
 TabScroll.Position = UDim2.new(0, 10, 0, 40)
 TabScroll.BackgroundColor3 = Color3.fromRGB(24, 34, 46)
-TabScroll.CanvasSize = UDim2.new(0, 0, 0, 300)
+TabScroll.CanvasSize = UDim2.new(0, 0, 0, 220)
 TabScroll.ScrollBarThickness = 2
 TabScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
 TabScroll.ZIndex = 5
@@ -118,7 +111,7 @@ end)
 local Tabs = {}
 local function createTab(name)
     local tab = Instance.new("Frame")
-    tab.Size = UDim2.new(1, -155, 1, -45)
+    tab.Size = UDim2.new(1, -155, 1, -50)
     tab.Position = UDim2.new(0, 145, 0, 40)
     tab.BackgroundTransparency = 1
     tab.Name = name
@@ -145,7 +138,7 @@ local function showTab(name)
                 btn.TextColor3 = Color3.fromRGB(135, 206, 250)
             else
                 btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
-                btn.TextColor3 = Color3.fromRGB(180, 200, 220)
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
         end
     end
@@ -155,7 +148,7 @@ local function addTabButton(name, order)
     local btn = Instance.new("TextButton", TabScroll)
     btn.Size = UDim2.new(1, 0, 0, 34)
     btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
-    btn.TextColor3 = Color3.fromRGB(180, 200, 220)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Text = name
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 11
@@ -169,12 +162,12 @@ addTabButton("Main", 1)
 addTabButton("Vision", 2)
 addTabButton("Script", 3)
 addTabButton("Hack Game", 4)
-addTabButtonButton = addTabButton("Setting", 5)
+addTabButton("Setting", 5)
 
 -- Hiển thị Tab mặc định ngay lập tức
 showTab("Main")
 
--- Tạo nội dung trống cho tab Main để không bị trống rỗng
+-- Tạo nội dung trống cho tab Main
 local MainLabel = Instance.new("TextLabel", Tabs["Main"])
 MainLabel.Size = UDim2.new(1,0,1,0)
 MainLabel.BackgroundTransparency = 1
@@ -182,8 +175,9 @@ MainLabel.Text = "Chào mừng bạn đến với Vuhub Premium!\nChọn các Ta
 MainLabel.Font = Enum.Font.GothamSemibold
 MainLabel.TextColor3 = Color3.fromRGB(255,255,255)
 MainLabel.TextSize = 13
+MainLabel.ZIndex = 4
 
--- Toggle Helper (Giao diện chuẩn Bluesky)
+-- Toggle Helper
 local function createToggleButton(parent,text,y,settingKey,callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(1,-10,0,32)
@@ -218,8 +212,7 @@ local function createToggleButton(parent,text,y,settingKey,callback)
 end
 
 -------------------------------------------------
--- TAB HACK GAME (2 BẢNG THÔNG TIN + NÚT BẤM)
-
+-- TAB HACK GAME
 local HackGameScroll = Instance.new("ScrollingFrame", Tabs["Hack Game"])
 HackGameScroll.Size = UDim2.new(1, 0, 1, 0)
 HackGameScroll.BackgroundTransparency = 1
@@ -261,7 +254,7 @@ local function makeTeamLabel(key, text)
     lbl.Text = "• " .. text .. ": ❌ No"
     lbl.Font = Enum.Font.GothamSemibold
     lbl.TextSize = 10
-    lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.ZIndex = 4
     teamLabels[key] = {obj = lbl, text = text}
@@ -323,7 +316,7 @@ makeAntiLabel("Humanoid", "Humanoid Property State Check")
 makeAntiLabel("Remote", "RemoteEvent Spam & Ban Protection")
 makeAntiLabel("Byfron", "Hyperion / Byfron Client Engine")
 
--- Logic Quét Đồng Thời
+-- Logic Quét
 local function MasterScanner()
     local detects = { Auto = false, Spawn = false, UI = false, Random = false, Balanced = false, Gated = false, Attr = false, Tag = false, Money = false }
     for _, t in pairs(teams:GetTeams()) do
@@ -351,7 +344,7 @@ local function MasterScanner()
         local labelData = teamLabels[key]
         if labelData then
             if state then labelData.obj.Text = "• " .. labelData.text .. ": Yes" labelData.obj.TextColor3 = Color3.fromRGB(135, 206, 250)
-            else labelData.obj.Text = "• " .. labelData.text .. ": ❌ No" labelData.obj.TextColor3 = Color3.fromRGB(180, 180, 180) end
+            else labelData.obj.Text = "• " .. labelData.text .. ": ❌ No" labelData.obj.TextColor3 = Color3.fromRGB(255, 255, 255) end
         end
     end
 
@@ -376,7 +369,7 @@ end
 task.spawn(function() while task.wait(3) do if Tabs["Hack Game"].Visible then MasterScanner() end end end)
 MasterScanner()
 
--- ĐẨY NÚT HACK XUỐNG DƯỚI AN TOÀN
+-- Các nút Hack
 createToggleButton(HackGameScroll,"Speed",295,"SpeedToggle",function(on)
     if on then
         if not getgenv().SpeedConn then
@@ -428,7 +421,7 @@ createToggleButton(HackGameScroll,"Noclip",415,"Noclip",function(on)
 end)
 
 -------------------------------------------------
--- TAB VISION 
+-- TAB VISION
 local function applyHitboxReal(p, teamCheck)
     if p == player or not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
     if teamCheck and p.Team == player.Team then return end
