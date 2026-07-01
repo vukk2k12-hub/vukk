@@ -24,6 +24,7 @@ local playerCache = {}
 -- GUI chính
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "BaconPremium"
+ScreenGui.ResetOnSpawn = false
 
 -- Icon bật tắt menu (Màu Bluesky)
 local ToggleButton = Instance.new("ImageButton", ScreenGui)
@@ -35,7 +36,7 @@ ToggleButton.BackgroundTransparency = 1
 ToggleButton.Active = true
 ToggleButton.Draggable = true
 
--- Main Frame (Mở rộng hẳn lên 550x360 để không bao giờ bị lỗi ẩn nút)
+-- Main Frame (Kích thước lớn chuẩn Bluesky)
 local MainFrame = Instance.new("Frame", ScreenGui)
 local originalSize = UDim2.new(0, 550, 0, 360)
 local originalPosition = UDim2.new(0.5, -275, 0.5, -180)
@@ -45,7 +46,7 @@ MainFrame.BackgroundColor3 = Color3.fromRGB(15, 25, 35)
 MainFrame.Visible = true
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = false -- Sửa lỗi: Tắt để hiển thị hoàn toàn các tab con
+MainFrame.ClipsDescendants = false 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,12)
 
 -- Viền hiệu ứng LED - CHỦ ĐỀ BLUESKY
@@ -72,7 +73,7 @@ local TitleLabel = Instance.new("TextLabel", TopBar)
 TitleLabel.Size = UDim2.new(1, 0, 1, 0)
 TitleLabel.Position = UDim2.new(0, 0, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "VUHUB PREMIUM [BLUESKY EDITION - FULL]"
+TitleLabel.Text = "VUHUB PREMIUM [BLUESKY EDITION]"
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 14
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -81,14 +82,15 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
 local TextGradient = Instance.new("UIGradient", TitleLabel)
 TextGradient.Color = neonSequence
 
--- Thanh Tab dọc bên trái cố định (Sửa lỗi vị trí bị đẩy)
+-- Thanh Tab dọc bên trái (Được gán ZIndex cao để không bị đè mất)
 local TabScroll = Instance.new("ScrollingFrame", MainFrame)
 TabScroll.Size = UDim2.new(0, 125, 1, -45)
-TabScroll.Position = UDim2.new(0, 10, 0, 35)
+TabScroll.Position = UDim2.new(0, 10, 0, 40)
 TabScroll.BackgroundColor3 = Color3.fromRGB(24, 34, 46)
 TabScroll.CanvasSize = UDim2.new(0, 0, 0, 300)
 TabScroll.ScrollBarThickness = 2
 TabScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
+TabScroll.ZIndex = 5
 Instance.new("UICorner", TabScroll).CornerRadius = UDim.new(0,8)
 
 local UIListLayout = Instance.new("UIListLayout", TabScroll)
@@ -108,31 +110,20 @@ rs.RenderStepped:Connect(function()
 end)
 
 -- Đóng mở Menu
-local isTweening = false
 ToggleButton.MouseButton1Click:Connect(function()
-    if isTweening then return end
-    isTweening = true
-    if MainFrame.Visible then
-        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
-        tween:Play()
-        tween.Completed:Connect(function() MainFrame.Visible = false isTweening = false end)
-    else
-        MainFrame.Size = UDim2.new(0, 0, 0, 0)
-        MainFrame.Visible = true
-        local tween = tweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = originalSize})
-        tween:Play()
-        tween.Completed:Connect(function() isTweening = false end)
-    end
+    MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Tạo các vùng chứa nội dung Tab (Căn chỉnh khoảng cách chuẩn xác để không đè nhau)
+-- Tạo các vùng chứa nội dung Tab
 local Tabs = {}
 local function createTab(name)
     local tab = Instance.new("Frame")
-    tab.Size = UDim2.new(1, -150, 1, -45)
-    tab.Position = UDim2.new(0, 140, 0, 35)
+    tab.Size = UDim2.new(1, -155, 1, -45)
+    tab.Position = UDim2.new(0, 145, 0, 40)
     tab.BackgroundTransparency = 1
     tab.Name = name
+    tab.ZIndex = 3
+    tab.Visible = false
     tab.Parent = MainFrame
     Tabs[name] = tab
 end
@@ -144,11 +135,18 @@ createTab("Hack Game")
 createTab("Setting")
 
 local function showTab(name)
-    for n,f in pairs(Tabs) do f.Visible = (n==name) end
+    for n,f in pairs(Tabs) do 
+        f.Visible = (n == name) 
+    end
     for _,btn in pairs(TabScroll:GetChildren()) do
         if btn:IsA("TextButton") then
-            btn.BackgroundColor3 = (btn.Text==name) and Color3.fromRGB(35, 55, 75) or Color3.fromRGB(24, 38, 53)
-            btn.TextColor3 = (btn.Text==name) and Color3.fromRGB(135, 206, 250) or Color3.fromRGB(180, 200, 220)
+            if btn.Text == name then
+                btn.BackgroundColor3 = Color3.fromRGB(35, 55, 75)
+                btn.TextColor3 = Color3.fromRGB(135, 206, 250)
+            else
+                btn.BackgroundColor3 = Color3.fromRGB(24, 38, 53)
+                btn.TextColor3 = Color3.fromRGB(180, 200, 220)
+            end
         end
     end
 end
@@ -162,6 +160,7 @@ local function addTabButton(name, order)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 11
     btn.LayoutOrder = order
+    btn.ZIndex = 6
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.MouseButton1Click:Connect(function() showTab(name) end)
 end
@@ -170,8 +169,19 @@ addTabButton("Main", 1)
 addTabButton("Vision", 2)
 addTabButton("Script", 3)
 addTabButton("Hack Game", 4)
-addTabButton("Setting", 5)
+addTabButtonButton = addTabButton("Setting", 5)
+
+-- Hiển thị Tab mặc định ngay lập tức
 showTab("Main")
+
+-- Tạo nội dung trống cho tab Main để không bị trống rỗng
+local MainLabel = Instance.new("TextLabel", Tabs["Main"])
+MainLabel.Size = UDim2.new(1,0,1,0)
+MainLabel.BackgroundTransparency = 1
+MainLabel.Text = "Chào mừng bạn đến với Vuhub Premium!\nChọn các Tab bên trái để hack game."
+MainLabel.Font = Enum.Font.GothamSemibold
+MainLabel.TextColor3 = Color3.fromRGB(255,255,255)
+MainLabel.TextSize = 13
 
 -- Toggle Helper (Giao diện chuẩn Bluesky)
 local function createToggleButton(parent,text,y,settingKey,callback)
@@ -182,6 +192,7 @@ local function createToggleButton(parent,text,y,settingKey,callback)
     btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Font = Enum.Font.GothamSemibold
     btn.TextSize = 12
+    btn.ZIndex = parent.ZIndex + 1
     btn.Text = text.." : "..(settings[settingKey] and "ON" or "OFF")
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
     
@@ -207,13 +218,14 @@ local function createToggleButton(parent,text,y,settingKey,callback)
 end
 
 -------------------------------------------------
--- TAB HACK GAME (SỬA LỖI TRÀN KHUNG: DÙNG SCROLLING CHUẨN)
+-- TAB HACK GAME (2 BẢNG THÔNG TIN + NÚT BẤM)
 
 local HackGameScroll = Instance.new("ScrollingFrame", Tabs["Hack Game"])
 HackGameScroll.Size = UDim2.new(1, 0, 1, 0)
 HackGameScroll.BackgroundTransparency = 1
-HackGameScroll.CanvasSize = UDim2.new(0, 0, 0, 520) -- Đảm bảo đủ chỗ cho cả 2 bảng và các nút hack
+HackGameScroll.CanvasSize = UDim2.new(0, 0, 0, 520)
 HackGameScroll.ScrollBarThickness = 3
+HackGameScroll.ZIndex = 3
 HackGameScroll.ScrollBarImageColor3 = Color3.fromRGB(135, 206, 250)
 
 -- BẢNG 1: CHECK TEAM
@@ -221,6 +233,7 @@ local TeamStatusFrame = Instance.new("Frame", HackGameScroll)
 TeamStatusFrame.Size = UDim2.new(1, -10, 0, 150)
 TeamStatusFrame.Position = UDim2.new(0, 5, 0, 5)
 TeamStatusFrame.BackgroundColor3 = Color3.fromRGB(20, 32, 46)
+TeamStatusFrame.ZIndex = 4
 Instance.new("UICorner", TeamStatusFrame).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", TeamStatusFrame).Color = Color3.fromRGB(135, 206, 250)
 
@@ -231,11 +244,13 @@ TeamTitle.Text = "🔍 PHÂN TÍCH HỆ THỐNG TEAM CỦA GAME"
 TeamTitle.Font = Enum.Font.GothamBold
 TeamTitle.TextSize = 11
 TeamTitle.TextColor3 = Color3.fromRGB(135, 206, 250)
+TeamTitle.ZIndex = 4
 
 local TeamContainer = Instance.new("Frame", TeamStatusFrame)
 TeamContainer.Size = UDim2.new(1, -10, 1, -25)
 TeamContainer.Position = UDim2.new(0, 5, 0, 24)
 TeamContainer.BackgroundTransparency = 1
+TeamContainer.ZIndex = 4
 local TeamListLayout = Instance.new("UIListLayout", TeamContainer) TeamListLayout.Padding = UDim.new(0, 1)
 
 local teamLabels = {}
@@ -248,6 +263,7 @@ local function makeTeamLabel(key, text)
     lbl.TextSize = 10
     lbl.TextColor3 = Color3.fromRGB(180, 180, 180)
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 4
     teamLabels[key] = {obj = lbl, text = text}
 end
 
@@ -266,6 +282,7 @@ local AntiStatusFrame = Instance.new("Frame", HackGameScroll)
 AntiStatusFrame.Size = UDim2.new(1, -10, 0, 120)
 AntiStatusFrame.Position = UDim2.new(0, 5, 0, 165)
 AntiStatusFrame.BackgroundColor3 = Color3.fromRGB(20, 32, 46)
+AntiStatusFrame.ZIndex = 4
 Instance.new("UICorner", AntiStatusFrame).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", AntiStatusFrame).Color = Color3.fromRGB(135, 206, 250)
 
@@ -276,11 +293,13 @@ AntiTitle.Text = "🛡️ HỆ THỐNG KIỂM TRA ANTI-CHEAT"
 AntiTitle.Font = Enum.Font.GothamBold
 AntiTitle.TextSize = 11
 AntiTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+AntiTitle.ZIndex = 4
 
 local AntiContainer = Instance.new("Frame", AntiStatusFrame)
 AntiContainer.Size = UDim2.new(1, -10, 1, -25)
 AntiContainer.Position = UDim2.new(0, 5, 0, 24)
 AntiContainer.BackgroundTransparency = 1
+AntiContainer.ZIndex = 4
 local AntiListLayout = Instance.new("UIListLayout", AntiContainer) AntiListLayout.Padding = UDim.new(0, 1)
 
 local antiLabels = {}
@@ -293,6 +312,7 @@ local function makeAntiLabel(key, text)
     lbl.TextSize = 10
     lbl.TextColor3 = Color3.fromRGB(150, 200, 150)
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 4
     antiLabels[key] = {obj = lbl, text = text}
 end
 
@@ -356,7 +376,7 @@ end
 task.spawn(function() while task.wait(3) do if Tabs["Hack Game"].Visible then MasterScanner() end end end)
 MasterScanner()
 
--- ĐẨY NÚT HACK XUỐNG DƯỚI AN TOÀN (Y bắt đầu từ 295)
+-- ĐẨY NÚT HACK XUỐNG DƯỚI AN TOÀN
 createToggleButton(HackGameScroll,"Speed",295,"SpeedToggle",function(on)
     if on then
         if not getgenv().SpeedConn then
@@ -408,7 +428,7 @@ createToggleButton(HackGameScroll,"Noclip",415,"Noclip",function(on)
 end)
 
 -------------------------------------------------
--- TAB VISION (GIỮ NGUYÊN FULL CHỨC NĂNG CŨ: ESP FRIEND, NAMETAG, THANH MÁU)
+-- TAB VISION 
 local function applyHitboxReal(p, teamCheck)
     if p == player or not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then return end
     if teamCheck and p.Team == player.Team then return end
@@ -513,12 +533,13 @@ rs.Heartbeat:Connect(function()
 end)
 
 -------------------------------------------------
--- TAB SCRIPT (GIỮ NGUYÊN HOÀN TOÀN 10 SCRIPT BAN ĐẦU)
+-- TAB SCRIPT
 local ScriptScroll = Instance.new("ScrollingFrame", Tabs["Script"])
 ScriptScroll.Size = UDim2.new(1,0,1,0)
 ScriptScroll.CanvasSize = UDim2.new(0,0,0,450)
 ScriptScroll.ScrollBarThickness = 3
 ScriptScroll.BackgroundTransparency = 1
+ScriptScroll.ZIndex = 3
 local sLayout = Instance.new("UIListLayout", ScriptScroll) sLayout.Padding = UDim.new(0,5)
 
 local function addScriptButton(name, url)
@@ -528,6 +549,7 @@ local function addScriptButton(name, url)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Font = Enum.Font.GothamSemibold
+    btn.ZIndex = 4
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     Instance.new("UIStroke", btn).Color = Color3.fromRGB(135, 206, 250)
     btn.MouseButton1Click:Connect(function() loadstring(game:HttpGet(url))() end)
@@ -550,6 +572,7 @@ local SettingScroll = Instance.new("ScrollingFrame", Tabs["Setting"])
 SettingScroll.Size = UDim2.new(1,0,1,0)
 SettingScroll.CanvasSize = UDim2.new(0,0,0,320)
 SettingScroll.BackgroundTransparency = 1
+SettingScroll.ZIndex = 3
 
 local function createTextBox(placeholder, y, defaultText, callback)
     local box = Instance.new("TextBox", SettingScroll)
@@ -557,6 +580,7 @@ local function createTextBox(placeholder, y, defaultText, callback)
     box.Position = UDim2.new(0,5,0,y)
     box.PlaceholderText = placeholder box.Text = defaultText
     box.BackgroundColor3 = Color3.fromRGB(24, 38, 53) box.TextColor3 = Color3.fromRGB(255,255,255)
+    box.ZIndex = 4
     Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
     Instance.new("UIStroke", box).Color = Color3.fromRGB(135, 206, 250)
     box.FocusLost:Connect(function() callback(box) end)
