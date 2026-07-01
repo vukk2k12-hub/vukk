@@ -1,10 +1,9 @@
 -- ====================================================================
--- BLUE SKY INTERFACE - FULL CORE_GUI EXECUTOR VERSION
+-- BLUE SKY INTERFACE - ULTIMATE VERSION (CỐ ĐỊNH TAB Y = 500)
 -- ====================================================================
 
--- Khởi tạo và đẩy thẳng GUI vào CoreGui hệ thống (An toàn & Chống xóa)
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BlueSkyCoreGui_Official"
+ScreenGui.Name = "BlueSkyCoreGui_Fixed_Y500"
 ScreenGui.ResetOnSpawn = false
 
 local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
@@ -14,7 +13,6 @@ else
 	ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Khai báo các Services cần thiết của Roblox
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -23,22 +21,16 @@ local Teams = game:GetService("Teams")
 local UserInputService = game:GetService("UserInputService")
 local localPlayer = Players.LocalPlayer
 
--- Cấu hình hiệu ứng & Màu sắc chủ đạo (Gradient chuyển động)
-local popTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local fadeTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local colorTweenInfo = TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+-- Cấu hình màu sắc đúng chuẩn yêu cầu
+local menuBgColor = Color3.fromRGB(15, 32, 67) -- Màu nền menu: Blue Sky tối sang trọng
+local borderLightColor = Color3.fromRGB(115, 194, 251) -- Màu viền Light phát sáng
 
-local colorLight = Color3.fromRGB(115, 194, 251)
-local colorDark = Color3.fromRGB(22, 45, 90)
-
--- Quản lý trạng thái các chức năng bật/tắt
 local states = {
 	Speed = false, Noclip = false, JumpPower = false, InfJump = false, XRay = false,
 	ESPAll = false, ESPTeam = false, HitboxAll = false, HitboxTeam = false, CheckFriends = false,
 	AntiFriend = false
 }
 
--- Cấu hình thông số mặc định (Có thể chỉnh sửa tại TAB 5)
 local settingsConfig = {
 	SpeedValue = 100,
 	JumpValue = 150,
@@ -46,7 +38,6 @@ local settingsConfig = {
 	HitboxTransValue = 0.7
 }
 
--- Bộ nhớ đệm lưu dữ liệu gốc để khôi phục khi tắt hack
 local xrayMemory = {}
 local hitboxMemory = {}
 local friendMemory = {}
@@ -56,30 +47,18 @@ local friendMemory = {}
 -- ==========================================
 local function isTeammate(targetPlayer)
 	if not targetPlayer then return false end
-	if localPlayer.Team and targetPlayer.Team then
-		return localPlayer.Team == targetPlayer.Team
-	end
-	if localPlayer.TeamColor and targetPlayer.TeamColor then
-		return localPlayer.TeamColor == targetPlayer.TeamColor
-	end
+	if localPlayer.Team and targetPlayer.Team then return localPlayer.Team == targetPlayer.Team end
+	if localPlayer.TeamColor and targetPlayer.TeamColor then return localPlayer.TeamColor == targetPlayer.TeamColor end
 	return false
 end
 
 local function checkIsFriend(targetPlayer)
-	if friendMemory[targetPlayer.UserId] ~= nil then
-		return friendMemory[targetPlayer.UserId]
-	end
-	local successCheck, isFriend = pcall(function()
-		return localPlayer:IsFriendsWith(targetPlayer.UserId)
-	end)
-	if successCheck then
-		friendMemory[targetPlayer.UserId] = isFriend
-		return isFriend
-	end
+	if friendMemory[targetPlayer.UserId] ~= nil then return friendMemory[targetPlayer.UserId] end
+	local successCheck, isFriend = pcall(function() return localPlayer:IsFriendsWith(targetPlayer.UserId) end)
+	if successCheck then friendMemory[targetPlayer.UserId] = isFriend return isFriend end
 	return false
 end
 
--- Hàm di chuyển menu (Kéo thả bằng chuột/tay)
 local function makeElementDraggable(guiObject)
 	local dragging, dragInput, dragStart, startPos
 	guiObject.InputBegan:Connect(function(input)
@@ -105,7 +84,6 @@ local function makeElementDraggable(guiObject)
 	end)
 end
 
--- Hàm vẽ text hiển thị Máu (HP) kẻ địch + Nhãn bạn bè
 local function createCustomESPText(character, targetPlayer, showFriend)
 	local head = character:WaitForChild("Head", 3)
 	if not head then return end
@@ -155,27 +133,37 @@ end
 -- TẠO GIAO DIỆN CHÍNH (GUI BUILDER)
 -- ==========================================
 local mainMenu = Instance.new("Frame")
-mainMenu.Name = "SuperMainMenu"
-mainMenu.Size = UDim2.new(0.65, 0, 0.7, 0)
+mainMenu.Name = "BlueSkyMainMenu"
+mainMenu.Size = UDim2.new(0.65, 0, 0, 580) -- Điều chỉnh kích thước dọc bao quát hết tab 500
 mainMenu.AnchorPoint = Vector2.new(0.5, 0.5)
 mainMenu.Position = UDim2.new(0.5, 0, 0.5, 0) 
-mainMenu.BackgroundColor3 = colorLight
+mainMenu.BackgroundColor3 = menuBgColor
 mainMenu.BorderSizePixel = 0
 mainMenu.ClipsDescendants = true
 mainMenu.Visible = false
 mainMenu.Parent = ScreenGui
 
-makeElementDraggable(mainMenu) -- Bật kéo thả cho menu chính
+makeElementDraggable(mainMenu)
 
 local menuCorner = Instance.new("UICorner")
 menuCorner.CornerRadius = UDim.new(0, 20)
 menuCorner.Parent = mainMenu
 
+-- Hệ thống viền đổi màu Đậm/Nhạt liên tục lặp lại
 local menuStroke = Instance.new("UIStroke")
-menuStroke.Color = Color3.fromRGB(255, 255, 255)
-menuStroke.Transparency = 0.5
+menuStroke.Color = borderLightColor
+menuStroke.Transparency = 0.1
 menuStroke.Thickness = 3
 menuStroke.Parent = mainMenu
+
+task.spawn(function()
+	while true do
+		local t1 = TweenService:Create(menuStroke, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Transparency = 0.8, Thickness = 1.5})
+		t1:Play() t1.Completed:Wait()
+		local t2 = TweenService:Create(menuStroke, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Transparency = 0.1, Thickness = 3.5})
+		t2:Play() t2.Completed:Wait()
+	end
+end)
 
 local menuTitle = Instance.new("TextLabel")
 menuTitle.Size = UDim2.new(1, 0, 0, 60)
@@ -187,13 +175,14 @@ menuTitle.Font = Enum.Font.FredokaOne
 menuTitle.ZIndex = 5
 menuTitle.Parent = mainMenu
 
--- Thanh chọn Tab bên trái (Left Sidebar)
+-- Thanh chọn Tab bên trái (CỐ ĐỊNH THEO YÊU CẦU: Y = 500, KHÔNG KÉO ĐƯỢC)
 local leftTabBar = Instance.new("Frame")
-leftTabBar.Size = UDim2.new(0.25, 0, 1, -70)
+leftTabBar.Size = UDim2.new(0.25, 0, 0, 500) -- Chiều dọc cố định bằng 500 theo ý bạn
 leftTabBar.Position = UDim2.new(0, 15, 0, 60)
 leftTabBar.BackgroundTransparency = 0.7
-leftTabBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+leftTabBar.BackgroundColor3 = Color3.fromRGB(10, 20, 45)
 leftTabBar.ZIndex = 4
+leftTabBar.Active = true -- Chặn click xuyên thấu nhưng không tích hợp hàm kéo thả (Draggable)
 leftTabBar.Parent = mainMenu
 
 local tabCorner = Instance.new("UICorner")
@@ -209,9 +198,9 @@ local tabPadding = Instance.new("UIPadding")
 tabPadding.PaddingTop = UDim.new(0, 10)
 tabPadding.Parent = leftTabBar
 
--- Khung hiển thị nội dung bên phải (Right Content Frame)
+-- Khung hiển thị nội dung bên phải (Cố định chiều dài tương đương với thanh Tab)
 local rightScrollFrame = Instance.new("ScrollingFrame")
-rightScrollFrame.Size = UDim2.new(0.7, 0, 1, -70)
+rightScrollFrame.Size = UDim2.new(0.7, 0, 0, 500)
 rightScrollFrame.Position = UDim2.new(0.28, 0, 0, 60)
 rightScrollFrame.BackgroundTransparency = 0.8
 rightScrollFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -226,9 +215,10 @@ local scrollCorner = Instance.new("UICorner")
 scrollCorner.CornerRadius = UDim.new(0, 12)
 scrollCorner.Parent = rightScrollFrame
 
+-- Ô nút chức năng nhỏ gọn gọn gàng (85x35)
 local gridLayout = Instance.new("UIGridLayout")
-gridLayout.CellSize = UDim2.new(0, 110, 0, 50)
-gridLayout.CellPadding = UDim2.new(0, 12, 0, 12)
+gridLayout.CellSize = UDim2.new(0, 85, 0, 35) 
+gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
 gridLayout.Parent = rightScrollFrame
 
 local scrollPadding = Instance.new("UIPadding")
@@ -236,7 +226,6 @@ scrollPadding.PaddingTop = UDim.new(0, 12)
 scrollPadding.PaddingLeft = UDim.new(0, 12)
 scrollPadding.Parent = rightScrollFrame
 
--- Điều hướng Tabs thông minh
 local currentTab = "Main"
 local buttonContainers = {}
 local tabCustomContainers = {}
@@ -244,10 +233,10 @@ local tabCustomContainers = {}
 local function createTabButton(tabId, text, isDefault)
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Size = UDim2.new(0.9, 0, 0, 35)
-	tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tabBtn.BackgroundTransparency = isDefault and 0.5 or 0.9
+	tabBtn.BackgroundColor3 = borderLightColor
+	tabBtn.BackgroundTransparency = isDefault and 0.4 or 0.85
 	tabBtn.Text = text
-	tabBtn.TextColor3 = isDefault and Color3.fromRGB(22, 45, 90) or Color3.fromRGB(255, 255, 255)
+	tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	tabBtn.Font = Enum.Font.SourceSansBold
 	tabBtn.TextSize = 13
 	tabBtn.ZIndex = 5
@@ -264,12 +253,10 @@ local function createTabButton(tabId, text, isDefault)
 		currentTab = tabId
 		for _, child in pairs(leftTabBar:GetChildren()) do
 			if child:IsA("TextButton") then
-				child.BackgroundTransparency = 0.9
-				child.TextColor3 = Color3.fromRGB(255, 255, 255)
+				child.BackgroundTransparency = 0.85
 			end
 		end
-		tabBtn.BackgroundTransparency = 0.5
-		tabBtn.TextColor3 = Color3.fromRGB(22, 45, 90)
+		tabBtn.BackgroundTransparency = 0.4
 
 		if currentTab == "Hacker" or currentTab == "Setting" then
 			gridLayout.Enabled = false
@@ -280,35 +267,33 @@ local function createTabButton(tabId, text, isDefault)
 		for tId, btnList in pairs(buttonContainers) do
 			for _, btn in pairs(btnList) do btn.Visible = (tId == currentTab) end
 		end
-		
 		for tId, panelList in pairs(tabCustomContainers) do
 			for _, panel in pairs(panelList) do panel.Visible = (tId == currentTab) end
 		end
 		
 		if currentTab == "Scripts" then
-			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 1000)
+			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 500)
 		elseif currentTab == "Hacker" or currentTab == "Setting" then
-			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 550)
+			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 400)
 		else
-			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 24)
+			task.skip()
+			rightScrollFrame.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 30)
 		end
 	end)
 end
 
--- Đăng ký hệ thống 5 Tab
 createTabButton("Main", "Chính (Main)", true)
 createTabButton("ESPHitbox", "ESP & Hitbox", false)
 createTabButton("Scripts", "Kịch Bản (Script)", false)
 createTabButton("Hacker", "Hacker ☠️", false)
 createTabButton("Setting", "Cài đặt (Setting) ⚙️", false)
 
--- Hàm tạo các nút chức năng bật/tắt (Toggle Button)
 local function createCheatButton(tabId, name, displayName, callback)
 	local btn = Instance.new("TextButton")
 	btn.Text = displayName
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 13
+	btn.TextSize = 11
 	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	btn.BackgroundTransparency = 0.85
 	btn.ZIndex = 5
@@ -316,13 +301,13 @@ local function createCheatButton(tabId, name, displayName, callback)
 	btn.Parent = rightScrollFrame
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 6)
 	corner.Parent = btn
 	
 	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1.5
-	stroke.Color = Color3.fromRGB(255, 255, 255)
-	stroke.Transparency = 0.5
+	stroke.Thickness = 1
+	stroke.Color = borderLightColor
+	stroke.Transparency = 0.4
 	stroke.Parent = btn
 
 	table.insert(buttonContainers[tabId], btn)
@@ -330,23 +315,22 @@ local function createCheatButton(tabId, name, displayName, callback)
 	btn.MouseButton1Click:Connect(function()
 		states[name] = not states[name]
 		if states[name] then
-			TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.3, BackgroundColor3 = Color3.fromRGB(0, 255, 127)}):Play()
+			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3, BackgroundColor3 = Color3.fromRGB(0, 255, 127)}):Play()
 			btn.TextColor3 = Color3.fromRGB(0, 0, 0)
 		else
-			TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 		end
 		callback(states[name])
 	end)
 end
 
--- Hàm tạo nút tải Script Hub (Tab 3)
 local function addScriptButton(displayName, url)
 	local btn = Instance.new("TextButton")
 	btn.Text = displayName
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 13
+	btn.TextSize = 11
 	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	btn.BackgroundTransparency = 0.85
 	btn.ZIndex = 5
@@ -354,12 +338,12 @@ local function addScriptButton(displayName, url)
 	btn.Parent = rightScrollFrame
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 6)
 	corner.Parent = btn
 	
 	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1.5
-	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Thickness = 1
+	stroke.Color = borderLightColor
 	stroke.Transparency = 0.5
 	stroke.Parent = btn
 
@@ -368,20 +352,17 @@ local function addScriptButton(displayName, url)
 	btn.MouseButton1Click:Connect(function()
 		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
 		btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-		TweenService:Create(btn, TweenInfo.new(0.4), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		task.delay(0.2, function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
-		
-		pcall(function()
-			loadstring(game:HttpGet(url))()
-		end)
+		TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		task.delay(0.15, function() btn.TextColor3 = Color3.fromRGB(255, 255, 255) end)
+		pcall(function() loadstring(game:HttpGet(url))() end)
 	end)
 end
 
 -- ==========================================
--- LOGIC CÁC TÍNH NĂNG (FEATURES CODE)
+-- LOGIC TÍNH NĂNG & THỜI GIAN THỰC (REALTIME)
 -- ==========================================
 
--- --- TAB 1: MAIN FUNCTIONALITIES ---
+-- --- TAB 1 ---
 createCheatButton("Main", "Speed", "Speed Hack", function(active)
 	local character = localPlayer.Character
 	if character and character:FindFirstChildOfClass("Humanoid") then 
@@ -413,9 +394,9 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
 		if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
 	end
 end)
-createCheatButton("Main", "InfJump", "Infinite Jump", function(active) end)
+createCheatButton("Main", "InfJump", "Inf Jump", function(active) end)
 
-createCheatButton("Main", "XRay", "X-Ray (Wall)", function(active)
+createCheatButton("Main", "XRay", "X-Ray", function(active)
 	if active then
 		for _, part in pairs(Workspace:GetDescendants()) do
 			if part:IsA("BasePart") and not part:IsDescendantOf(localPlayer.Character) then
@@ -431,115 +412,124 @@ createCheatButton("Main", "XRay", "X-Ray (Wall)", function(active)
 	end
 end)
 
--- --- TAB 2: BOX ESP HÌNH CHỮ NHẬT & THANH MÁU HP ---
-task.spawn(function()
-	while true do
-		if states.ESPAll or states.ESPTeam or states.HitboxAll or states.HitboxTeam then
-			for _, player in pairs(Players:GetPlayers()) do
-				if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-					local hrp = player.Character.HumanoidRootPart
-					local isTeam = isTeammate(player)
-					local isFriend = checkIsFriend(player)
-					local ignoreThisPlayer = states.AntiFriend and isFriend
+-- --- TỐI ƯU CẬP NHẬT ESP & HITBOX KHI KHÁCH VÀO/RA/HỒI SINH ---
+local function updateESPAndHitboxForPlayer(player)
+	if player == localPlayer then return end
+	
+	local function onCharAdded(character)
+		local hrp = character:WaitForChild("HumanoidRootPart", 5)
+		local hum = character:WaitForChild("Humanoid", 5)
+		if not hrp or not hum then return end
 
-					-- Render Box ESP & HP text
-					local shouldESP = (states.ESPAll or (states.ESPTeam and isTeam)) and not ignoreThisPlayer
-					if shouldESP then
-						local highlight = hrp:FindFirstChild("ESPHighlight") or Instance.new("Highlight")
-						highlight.Name = "ESPHighlight"
-						highlight.Adornee = player.Character
-						highlight.Parent = hrp
-						
-						highlight.FillTransparency = 1 
-						highlight.OutlineTransparency = 0
-						
-						if states.CheckFriends and isFriend then
-							highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
-							createCustomESPText(player.Character, player, true)
-						else
-							highlight.OutlineColor = isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0)
-							createCustomESPText(player.Character, player, false)
-						end
-					else
-						local highlight = hrp:FindFirstChild("ESPHighlight")
-						if highlight then highlight:Destroy() end
-						removeCustomESPText(player.Character)
-					end
+		local hpConnection
+		hpConnection = hum.HealthChanged:Connect(function()
+			if character.Parent and hrp:FindFirstChild("ESPHighlight") then
+				local isFriend = checkIsFriend(player)
+				createCustomESPText(character, player, states.CheckFriends and isFriend)
+			else
+				hpConnection:Disconnect()
+			end
+		end)
 
-					-- Render Hitbox nâng cao theo cấu hình tại Tab 5
-					local shouldHitbox = (states.HitboxAll or (states.HitboxTeam and isTeam)) and not ignoreThisPlayer
-					if shouldHitbox then
-						if not hitboxMemory[player] then
-							hitboxMemory[player] = {Size = hrp.Size, Trans = hrp.Transparency, Collide = hrp.CanCollide, Color = hrp.Color}
-						end
-						hrp.Size = Vector3.new(settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue)
-						hrp.CanCollide = false
-						hrp.Transparency = settingsConfig.HitboxTransValue
-						
-						if states.CheckFriends and isFriend then
-							hrp.Color = Color3.fromRGB(0, 255, 0)
-						else
-							hrp.Color = isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0)
-						end
-					else
-						if hitboxMemory[player] then
-							hrp.Size = hitboxMemory[player].Size
-							hrp.Transparency = hitboxMemory[player].Trans
-							hrp.CanCollide = hitboxMemory[player].Collide
-							hrp.Color = hitboxMemory[player].Color
-							hitboxMemory[player] = nil
-						end
-					end
-				end
+		local isTeam = isTeammate(player)
+		local isFriend = checkIsFriend(player)
+		local ignoreThisPlayer = states.AntiFriend and isFriend
+
+		-- ESP Box + HP text
+		local shouldESP = (states.ESPAll or (states.ESPTeam and isTeam)) and not ignoreThisPlayer
+		if shouldESP then
+			local highlight = hrp:FindFirstChild("ESPHighlight") or Instance.new("Highlight")
+			highlight.Name = "ESPHighlight"
+			highlight.Adornee = character
+			highlight.Parent = hrp
+			highlight.FillTransparency = 1
+			highlight.OutlineTransparency = 0
+			
+			if states.CheckFriends and isFriend then
+				highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+				createCustomESPText(character, player, true)
+			else
+				highlight.OutlineColor = isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0)
+				createCustomESPText(character, player, false)
 			end
 		else
-			for _, player in pairs(Players:GetPlayers()) do
-				if player.Character then
-					if player.Character:FindFirstChild("HumanoidRootPart") then
-						local hl = player.Character.HumanoidRootPart:FindFirstChild("ESPHighlight")
-						if hl then hl:Destroy() end
-						local hrp = player.Character.HumanoidRootPart
-						if hitboxMemory[player] then
-							hrp.Size = hitboxMemory[player].Size
-							hrp.Transparency = hitboxMemory[player].Trans
-							hrp.CanCollide = hitboxMemory[player].Collide
-							hrp.Color = hitboxMemory[player].Color
-						end
-					end
-					removeCustomESPText(player.Character)
-				end
-			end
-			table.clear(hitboxMemory)
+			local highlight = hrp:FindFirstChild("ESPHighlight")
+			if highlight then highlight:Destroy() end
+			removeCustomESPText(character)
 		end
-		task.wait(0.2)
+
+		-- Hitbox
+		local shouldHitbox = (states.HitboxAll or (states.HitboxTeam and isTeam)) and not ignoreThisPlayer
+		if shouldHitbox then
+			if not hitboxMemory[player] then
+				hitboxMemory[player] = {Size = hrp.Size, Trans = hrp.Transparency, Collide = hrp.CanCollide, Color = hrp.Color}
+			end
+			hrp.Size = Vector3.new(settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue)
+			hrp.CanCollide = false
+			hrp.Transparency = settingsConfig.HitboxTransValue
+			hrp.Color = (states.CheckFriends and isFriend) and Color3.fromRGB(0, 255, 0) or (isTeam and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(255, 0, 0))
+		else
+			if hitboxMemory[player] then
+				hrp.Size = hitboxMemory[player].Size
+				hrp.Transparency = hitboxMemory[player].Trans
+				hrp.CanCollide = hitboxMemory[player].Collide
+				hrp.Color = hitboxMemory[player].Color
+				hitboxMemory[player] = nil
+			end
+		end
+	end
+
+	if player.Character then task.spawn(onCharAdded, player.Character) end
+	player.CharacterAdded:Connect(onCharAdded)
+end
+
+local function triggerESPRefresh()
+	for _, p in pairs(Players:GetPlayers()) do
+		if p.Character then updateESPAndHitboxForPlayer(p) end
+	end
+end
+
+Players.PlayerAdded:Connect(function(newPlayer)
+	updateESPAndHitboxForPlayer(newPlayer)
+end)
+
+Players.PlayerRemoving:Connect(function(leftPlayer)
+	hitboxMemory[leftPlayer] = nil
+	friendMemory[leftPlayer.UserId] = nil
+end)
+
+createCheatButton("ESPHitbox", "AntiFriend", "Né Bạn 🛡️", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "CheckFriends", "Màu Bạn 👥", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "ESPAll", "ESP Box", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "ESPTeam", "ESP Team", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "HitboxAll", "Hitbox All", function() triggerESPRefresh() end)
+createCheatButton("ESPHitbox", "HitboxTeam", "Hitbox Đội", function() triggerESPRefresh() end)
+
+task.spawn(function()
+	while true do
+		triggerESPRefresh()
+		task.wait(1.5)
 	end
 end)
 
-createCheatButton("ESPHitbox", "AntiFriend", "Né Bạn Bè 🛡️", function(active) end)
-createCheatButton("ESPHitbox", "CheckFriends", "Hiện Màu Bạn 👥", function(active) end)
-createCheatButton("ESPHitbox", "ESPAll", "ESP Box + HP", function(active) end)
-createCheatButton("ESPHitbox", "ESPTeam", "ESP Team Box", function(active) end)
-createCheatButton("ESPHitbox", "HitboxAll", "Hitbox All", function(active) end)
-createCheatButton("ESPHitbox", "HitboxTeam", "Hitbox Team", function(active) end)
-
--- --- TAB 3: SCRIPT HUB LINKS ---
+-- --- TAB 3 ---
 addScriptButton("FlyGui", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/flyvukkhub")
-addScriptButton("buildandsteal", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
-addScriptButton("Aimbotvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
-addScriptButton("tpvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
-addScriptButton("floatvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
-addScriptButton("adminhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
-addScriptButton("afkvuhub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
-addScriptButton("ma", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
-addScriptButton("blox fruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
-addScriptButton("benh vien", "https://airflowscript.com/loader")
+addScriptButton("BuildSteal", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
+addScriptButton("AimVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
+addScriptButton("TpVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
+addScriptButton("FloatVu", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
+addScriptButton("AdminHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
+addScriptButton("AfkVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
+addScriptButton("MaScript", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
+addScriptButton("BloxFruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
+addScriptButton("BenhVien", "https://airflowscript.com/loader")
 
--- --- TAB 4: HACKER REAL-TIME DETECTION PANEL ---
+-- --- TAB 4 ---
 local antiCheatPanel = Instance.new("Frame")
 antiCheatPanel.Name = "AntiCheatPanel"
-antiCheatPanel.Size = UDim2.new(0.94, 0, 0, 180)
+antiCheatPanel.Size = UDim2.new(0.94, 0, 0, 150)
 antiCheatPanel.Position = UDim2.new(0, 0, 0, 10)
-antiCheatPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+antiCheatPanel.BackgroundColor3 = Color3.fromRGB(10, 15, 35)
 antiCheatPanel.BackgroundTransparency = 0.4
 antiCheatPanel.Visible = (currentTab == "Hacker")
 antiCheatPanel.Parent = rightScrollFrame
@@ -548,28 +538,23 @@ local p1Corner = Instance.new("UICorner")
 p1Corner.CornerRadius = UDim.new(0, 10)
 p1Corner.Parent = antiCheatPanel
 
-local p1Stroke = Instance.new("UIStroke")
-p1Stroke.Thickness = 2
-p1Stroke.Color = Color3.fromRGB(255, 69, 0)
-p1Stroke.Parent = antiCheatPanel
-
 local p1Title = Instance.new("TextLabel")
 p1Title.Size = UDim2.new(1, 0, 0, 35)
 p1Title.BackgroundTransparency = 1
 p1Title.Text = "🛡️ SERVER ANTI-CHEAT STATUS"
 p1Title.TextColor3 = Color3.fromRGB(255, 85, 85)
-p1Title.TextSize = 14
+p1Title.TextSize = 13
 p1Title.Font = Enum.Font.FredokaOne
 p1Title.Parent = antiCheatPanel
 
 local function createStatusLabel(text, posY, parent)
 	local lbl = Instance.new("TextLabel")
-	lbl.Size = UDim2.new(0.9, 0, 0, 30)
+	lbl.Size = UDim2.new(0.9, 0, 0, 25)
 	lbl.Position = UDim2.new(0.05, 0, 0, posY)
 	lbl.BackgroundTransparency = 1
 	lbl.Text = text
 	lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-	lbl.TextSize = 14
+	lbl.TextSize = 13
 	lbl.Font = Enum.Font.SourceSansBold
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = parent
@@ -577,16 +562,16 @@ local function createStatusLabel(text, posY, parent)
 end
 
 local antiTpLabel = createStatusLabel("• Anti TP: SCANNING...", 40, antiCheatPanel)
-local antiSpeedLabel = createStatusLabel("• Anti Speed: SCANNING...", 85, antiCheatPanel)
-local antiFlyLabel = createStatusLabel("• Anti Fly: SCANNING...", 130, antiCheatPanel)
+local antiSpeedLabel = createStatusLabel("• Anti Speed: SCANNING...", 75, antiCheatPanel)
+local antiFlyLabel = createStatusLabel("• Anti Fly: SCANNING...", 110, antiCheatPanel)
 
 table.insert(tabCustomContainers["Hacker"], antiCheatPanel)
 
 local teamCheckPanel = Instance.new("Frame")
 teamCheckPanel.Name = "TeamCheckPanel"
-teamCheckPanel.Size = UDim2.new(0.94, 0, 0, 110)
-teamCheckPanel.Position = UDim2.new(0, 0, 0, 210)
-teamCheckPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+teamCheckPanel.Size = UDim2.new(0.94, 0, 0, 90)
+teamCheckPanel.Position = UDim2.new(0, 0, 0, 175)
+teamCheckPanel.BackgroundColor3 = Color3.fromRGB(10, 15, 35)
 teamCheckPanel.BackgroundTransparency = 0.4
 teamCheckPanel.Visible = (currentTab == "Hacker")
 teamCheckPanel.Parent = rightScrollFrame
@@ -595,91 +580,52 @@ local p2Corner = Instance.new("UICorner")
 p2Corner.CornerRadius = UDim.new(0, 10)
 p2Corner.Parent = teamCheckPanel
 
-local p2Stroke = Instance.new("UIStroke")
-p2Stroke.Thickness = 2
-p2Stroke.Color = Color3.fromRGB(0, 191, 255)
-p2Stroke.Parent = teamCheckPanel
-
 local p2Title = Instance.new("TextLabel")
 p2Title.Size = UDim2.new(1, 0, 0, 35)
 p2Title.BackgroundTransparency = 1
 p2Title.Text = "👥 SERVER TEAM-CHECK METHOD"
 p2Title.TextColor3 = Color3.fromRGB(85, 200, 255)
-p2Title.TextSize = 14
+p2Title.TextSize = 13
 p2Title.Font = Enum.Font.FredokaOne
 p2Title.Parent = teamCheckPanel
 
-local teamTypeLabel = createStatusLabel("• Active Method: SCANNING...", 50, teamCheckPanel)
+local teamTypeLabel = createStatusLabel("• Active Method: SCANNING...", 45, teamCheckPanel)
 
 table.insert(tabCustomContainers["Hacker"], teamCheckPanel)
 
 task.spawn(function()
 	while true do
-		local hasAntiTp = "NO"
-		local hasAntiSpeed = "NO"
-		local hasAntiFly = "NO"
-
-		for _, v in pairs(game:GetDescendants()) do
-			if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") then
-				local name = string.lower(v.Name)
-				if string.find(name, "anticheat") or string.find(name, "vanguard") or string.find(name, "grim") or string.find(name, "adonis") then
-					hasAntiTp = "YES"
-					hasAntiSpeed = "YES"
-					hasAntiFly = "YES"
-					break
+		if currentTab == "Hacker" then
+			local hasAntiTp, hasAntiSpeed, hasAntiFly = "NO", "NO", "NO"
+			for _, v in pairs(game:GetDescendants()) do
+				if v:IsA("Script") or v:IsA("LocalScript") then
+					local name = string.lower(v.Name)
+					if string.find(name, "anticheat") or string.find(name, "vanguard") or string.find(name, "adonis") then
+						hasAntiTp, hasAntiSpeed, hasAntiFly = "YES", "YES", "YES" break
+					end
 				end
 			end
+			antiTpLabel.Text = "• Anti TP: " .. (hasAntiTp == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
+			antiSpeedLabel.Text = "• Anti Speed: " .. (hasAntiSpeed == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
+			antiFlyLabel.Text = "• Anti Fly: " .. (hasAntiFly == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
+			antiTpLabel.RichText, antiSpeedLabel.RichText, antiFlyLabel.RichText = true, true, true
+
+			local detMethod = "None / FFA"
+			if #Teams:GetTeams() > 0 then detMethod = "Roblox Team Object"
+			elseif localPlayer:FindFirstChild("leaderstats") then detMethod = "Leaderstats Team" end
+			teamTypeLabel.Text = "• Active Method: <font color='rgb(0,255,255)'>" .. detMethod .. "</font>"
+			teamTypeLabel.RichText = true
 		end
-
-		if Workspace:FindFirstChild("AntiCheat") or Workspace:FindFirstChild("AntiExploit") then
-			hasAntiTp = "YES"
-			hasAntiSpeed = "YES"
-		end
-		
-		if game:GetService("ReplicatedStorage"):FindFirstChild("AntiSpeed") or game:GetService("ReplicatedStorage"):FindFirstChild("CheckVelocity") then
-			hasAntiSpeed = "YES"
-			hasAntiFly = "YES"
-		end
-
-		antiTpLabel.Text = "• Anti TP: " .. (hasAntiTp == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-		antiSpeedLabel.Text = "• Anti Speed: " .. (hasAntiSpeed == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-		antiFlyLabel.Text = "• Anti Fly: " .. (hasAntiFly == "YES" and "<font color='rgb(255,0,0)'>YES</font>" or "<font color='rgb(0,255,0)'>NO</font>")
-		
-		antiTpLabel.RichText = true
-		antiSpeedLabel.RichText = true
-		antiFlyLabel.RichText = true
-
-		local detectedTeamMethod = "None / FFA"
-		if #Teams:GetTeams() > 0 then
-			if localPlayer.Team ~= nil then
-				detectedTeamMethod = "Roblox Team Object"
-			elseif localPlayer:FindFirstChild("TeamColor") or localPlayer:FindFirstChild("Team") then
-				detectedTeamMethod = "TeamColor Parameter"
-			else
-				detectedTeamMethod = "Custom Folder Teams"
-			end
-		else
-			local leaderstats = localPlayer:FindFirstChild("leaderstats")
-			if leaderstats and (leaderstats:FindFirstChild("Team") or leaderstats:FindFirstChild("Faction") or leaderstats:FindFirstChild("Group")) then
-				detectedTeamMethod = "Custom Leaderstats Value"
-			elseif localPlayer.Character and (localPlayer.Character:FindFirstChild("Team") or localPlayer.Character:FindFirstChild("Group")) then
-				detectedTeamMethod = "Custom Character Attributes"
-			end
-		end
-
-		teamTypeLabel.Text = "• Active Method: <font color='rgb(0,255,255)'>" .. detectedTeamMethod .. "</font>"
-		teamTypeLabel.RichText = true
-
-		task.wait(2.5)
+		task.wait(3)
 	end
 end)
 
--- --- TAB 5: SETTINGS CONFIGURATION FRAME ---
+-- --- TAB 5 ---
 local settingMainPanel = Instance.new("Frame")
 settingMainPanel.Name = "SettingMainPanel"
-settingMainPanel.Size = UDim2.new(0.94, 0, 0, 320)
+settingMainPanel.Size = UDim2.new(0.94, 0, 0, 260)
 settingMainPanel.Position = UDim2.new(0, 0, 0, 10)
-settingMainPanel.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
+settingMainPanel.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
 settingMainPanel.BackgroundTransparency = 0.3
 settingMainPanel.Visible = (currentTab == "Setting")
 settingMainPanel.Parent = rightScrollFrame
@@ -688,197 +634,109 @@ local p5Corner = Instance.new("UICorner")
 p5Corner.CornerRadius = UDim.new(0, 12)
 p5Corner.Parent = settingMainPanel
 
-local p5Stroke = Instance.new("UIStroke")
-p5Stroke.Thickness = 2
-p5Stroke.Color = Color3.fromRGB(238, 130, 238)
-p5Stroke.Parent = settingMainPanel
-
 local p5Title = Instance.new("TextLabel")
-p5Title.Size = UDim2.new(1, 0, 0, 40)
+p5Title.Size = UDim2.new(1, 0, 0, 35)
 p5Title.BackgroundTransparency = 1
 p5Title.Text = "⚙️ CONFIGURATION SETTINGS"
 p5Title.TextColor3 = Color3.fromRGB(240, 150, 255)
-p5Title.TextSize = 15
+p5Title.TextSize = 14
 p5Title.Font = Enum.Font.FredokaOne
 p5Title.Parent = settingMainPanel
 
 local function createSettingInputRow(labelText, placeholder, defaultVal, posY, callback)
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.5, 0, 0, 35)
+	label.Size = UDim2.new(0.5, 0, 0, 30)
 	label.Position = UDim2.new(0.05, 0, 0, posY)
 	label.BackgroundTransparency = 1
 	label.Text = labelText
 	label.TextColor3 = Color3.fromRGB(240, 240, 240)
-	label.TextSize = 13
+	label.TextSize = 12
 	label.Font = Enum.Font.SourceSansBold
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = settingMainPanel
 
 	local box = Instance.new("TextBox")
-	box.Size = UDim2.new(0.35, 0, 0, 30)
+	box.Size = UDim2.new(0.35, 0, 0, 25)
 	box.Position = UDim2.new(0.55, 0, 0, posY + 2)
-	box.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+	box.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
 	box.Text = tostring(defaultVal)
 	box.PlaceholderText = placeholder
 	box.TextColor3 = Color3.fromRGB(0, 255, 255)
 	box.Font = Enum.Font.Code
-	box.TextSize = 14
+	box.TextSize = 12
 	box.Parent = settingMainPanel
 
 	local boxCorner = Instance.new("UICorner")
 	boxCorner.CornerRadius = UDim.new(0, 6)
 	boxCorner.Parent = box
-	
-	local boxStroke = Instance.new("UIStroke")
-	boxStroke.Thickness = 1
-	boxStroke.Color = Color3.fromRGB(100, 100, 150)
-	boxStroke.Parent = box
 
-	box.FocusLost:Connect(function(enterPressed)
+	box.FocusLost:Connect(function()
 		local num = tonumber(box.Text)
-		if num then
-			callback(num)
-		else
-			box.Text = tostring(defaultVal)
-		end
+		if num then callback(num) else box.Text = tostring(defaultVal) end
 	end)
 end
 
-createSettingInputRow("1. Tốc độ chạy (WalkSpeed):", "Nhập speed...", settingsConfig.SpeedValue, 50, function(val)
+createSettingInputRow("1. Tốc độ chạy (WalkSpeed):", "Speed...", settingsConfig.SpeedValue, 45, function(val)
 	settingsConfig.SpeedValue = val
 	if states.Speed and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
 		localPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
 	end
 end)
-
-createSettingInputRow("2. Lực nhảy (JumpPower):", "Nhập jump...", settingsConfig.JumpValue, 110, function(val)
+createSettingInputRow("2. Lực nhảy (JumpPower):", "Jump...", settingsConfig.JumpValue, 95, function(val)
 	settingsConfig.JumpValue = val
 	if states.JumpPower and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
 		localPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
 	end
 end)
-
-createSettingInputRow("3. Kích thước khối Hitbox:", "Nhập size...", settingsConfig.HitboxSizeValue, 170, function(val)
-	settingsConfig.HitboxSizeValue = val
+createSettingInputRow("3. Kích thước khối Hitbox:", "Size...", settingsConfig.HitboxSizeValue, 145, function(val)
+	settingsConfig.HitboxSizeValue = val triggerESPRefresh()
 end)
-
-createSettingInputRow("4. Độ trong suốt Hitbox (0 - 1):", "Nhập độ trong...", settingsConfig.HitboxTransValue, 230, function(val)
-	if val >= 0 and val <= 1 then
-		settingsConfig.HitboxTransValue = val
-	else
-		settingsConfig.HitboxTransValue = 0.7
-	end
+createSettingInputRow("4. Độ trong suốt Hitbox (0-1):", "Trans...", settingsConfig.HitboxTransValue, 195, function(val)
+	settingsConfig.HitboxTransValue = (val >= 0 and val <= 1) and val or 0.7 triggerESPRefresh()
 end)
 
 table.insert(tabCustomContainers["Setting"], settingMainPanel)
 
 -- ==========================================
--- ĐỒNG BỘ HIỆU ỨNG CHUYỂN MÀU & NÚT MENU CHÍNH
+-- ĐỒNG BỘ NÚT BẤM KÍCH HOẠT MENU
 -- ==========================================
-local cloudContainer = Instance.new("Frame")
-cloudContainer.Size = UDim2.new(1, 0, 1, 0)
-cloudContainer.BackgroundTransparency = 1
-cloudContainer.ZIndex = 2
-cloudContainer.Parent = mainMenu
-
-local function createCloud(size, startY, speed)
-	local cloud = Instance.new("Frame")
-	cloud.Size = size
-	cloud.Position = UDim2.new(-0.3, 0, startY, 0)
-	cloud.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	cloud.BackgroundTransparency = 0.65
-	cloud.BorderSizePixel = 0
-	cloud.ZIndex = 2
-	cloud.Parent = cloudContainer
-
-	local cloudCorner = Instance.new("UICorner")
-	cloudCorner.CornerRadius = UDim.new(0.5, 0)
-	cloudCorner.Parent = cloud
-
-	task.spawn(function()
-		while true do
-			cloud.Position = UDim2.new(-0.3, 0, startY, 0)
-			local moveTween = TweenService:Create(cloud, TweenInfo.new(speed, Enum.EasingStyle.Linear), {Position = UDim2.new(1.2, 0, startY, 0)})
-			moveTween:Play()
-			moveTween.Completed:Wait()
-		end
-	end)
-end
-createCloud(UDim2.new(0, 180, 0, 60), 0.1, 20)
-createCloud(UDim2.new(0, 250, 0, 80), 0.4, 28)
-
--- Nút tròn nhỏ kích hoạt Menu (☰) đặt cố định trên màn hình
 local menuButton = Instance.new("TextButton")
-menuButton.Name = "BlueSkyMenuBtn"
-menuButton.Size = UDim2.new(0, 60, 0, 60)
-menuButton.Position = UDim2.new(0, 20, 0, 110) -- Tránh bị đè bởi Topbar/Chat mặc định
-menuButton.BackgroundColor3 = colorLight
-menuButton.Text = "☰"
+menuButton.Name = "BlueSkyToggleBtn"
+menuButton.Size = UDim2.new(0, 55, 0, 55)
+menuButton.Position = UDim2.new(0, 20, 0, 120)
+menuButton.BackgroundColor3 = borderLightColor
+menuButton.Text = "★"
 menuButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-menuButton.TextSize = 30
+menuButton.TextSize = 26
 menuButton.Font = Enum.Font.SourceSansBold
 menuButton.ZIndex = 10
 menuButton.Parent = ScreenGui
 
-makeElementDraggable(menuButton) -- Nút kích hoạt cũng có thể kéo di chuyển nếu vướng víu
+makeElementDraggable(menuButton)
 
 local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(0, 12)
 btnCorner.Parent = menuButton
 
 local btnStroke = Instance.new("UIStroke")
-btnStroke.Thickness = 3
-btnStroke.Color = colorDark
+btnStroke.Thickness = 2.5
+btnStroke.Color = menuBgColor
 btnStroke.Parent = menuButton
 
--- Hệ thống Chroma tự động đổi màu mượt mà theo thời gian
-task.spawn(function()
-	while true do
-		local t1 = TweenService:Create(mainMenu, colorTweenInfo, {BackgroundColor3 = colorDark})
-		local t2 = TweenService:Create(menuButton, colorTweenInfo, {BackgroundColor3 = colorDark})
-		local t3 = TweenService:Create(btnStroke, colorTweenInfo, {Color = colorLight})
-		t1:Play() t2:Play() t3:Play() t1.Completed:Wait()
-		
-		local t4 = TweenService:Create(mainMenu, colorTweenInfo, {BackgroundColor3 = colorLight})
-		local t5 = TweenService:Create(menuButton, colorTweenInfo, {BackgroundColor3 = colorLight})
-		local t6 = TweenService:Create(btnStroke, colorTweenInfo, {Color = colorDark})
-		t4:Play() t5:Play() t6:Play() t4.Completed:Wait()
-	end
-end)
-
 local isMenuOpen = false
-local basePosition = UDim2.new(0.5, 0, 0.5, 0)
-local bobbingConnection
-
--- Hiệu ứng bồng bềnh (Bobbing Effect) nhẹ nhàng khi mở menu
-local function startBobbing()
-	if bobbingConnection then bobbingConnection:Disconnect() end
-	local startTime = os.clock()
-	bobbingConnection = RunService.RenderStepped:Connect(function()
-		if isMenuOpen then
-			local offset = math.sin((os.clock() - startTime) * 2) * 12
-			mainMenu.Position = UDim2.new(mainMenu.Position.X.Scale, mainMenu.Position.X.Offset, 0.5, offset)
-		end
-	end)
-end
-
--- Logic ẩn/hiện menu khi click nút kích hoạt
 menuButton.MouseButton1Click:Connect(function()
 	isMenuOpen = not isMenuOpen
-	TweenService:Create(menuButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 52, 0, 52)}):Play()
-	task.delay(0.1, function() TweenService:Create(menuButton, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 60, 0, 60)}):Play() end)
-	
 	if isMenuOpen then
 		mainMenu.Size = UDim2.new(0, 0, 0, 0)
-		mainMenu.Position = basePosition
 		mainMenu.Visible = true
-		local menuTween = TweenService:Create(mainMenu, popTweenInfo, {Size = UDim2.new(0.65, 0, 0.7, 0)})
-		menuTween:Play()
-		menuTween.Completed:Connect(function() if isMenuOpen then startBobbing() end end)
+		-- Khi bung menu ra sẽ đạt tỷ lệ chuẩn ôm trọn thanh dọc 500
+		TweenService:Create(mainMenu, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0.65, 0, 0, 580)}):Play()
 	else
-		if bobbingConnection then bobbingConnection:Disconnect() bobbingConnection = nil end
-		local menuTween = TweenService:Create(mainMenu, fadeTweenInfo, {Size = UDim2.new(0, 0, 0, 0), Position = basePosition})
+		local menuTween = TweenService:Create(mainMenu, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
 		menuTween:Play()
 		menuTween.Completed:Connect(function() if not isMenuOpen then mainMenu.Visible = false end end)
 	end
 end)
+
+-- Khởi động nạp dữ liệu ban đầu cho toàn bộ máy chủ
+task.spawn(triggerESPRefresh)
