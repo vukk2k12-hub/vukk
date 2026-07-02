@@ -1,912 +1,761 @@
--- ====================================================================
--- by vuhub===================================================================
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BlueSkyCoreGui_FXUpdate"
-ScreenGui.ResetOnSpawn = false
-
-local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
-if success and coreGui then
-	ScreenGui.Parent = coreGui
+local _0x0000 = _0x0001._0x0002(string.char(83, 99, 114, 101, 101, 110, 71, 117, 105))
+_0x0000._0x0003 = string.char(66, 108, 117, 101, 83, 107, 121, 67, 111, 114, 101, 71, 117, 105, 95, 70, 88, 85, 112, 100, 97, 116, 101)
+_0x0000._0x0004 = false
+local _0x0005, _0x0006 = pcall(function() return _0x0007:_0x0008(string.char(67, 111, 114, 101, 71, 117, 105)) end)
+if _0x0005 and _0x0006 then
+_0x0000._0x0009 = _0x0006
 else
-	ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+_0x0000._0x0009 = _0x0007:_0x0008(string.char(80, 108, 97, 121, 101, 114, 115))._0x000a:_0x000b(string.char(80, 108, 97, 121, 101, 114, 71, 117, 105))
 end
-
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local Teams = game:GetService("Teams")
-local UserInputService = game:GetService("UserInputService")
-local LogService = game:GetService("LogService")
-local localPlayer = Players.LocalPlayer
-
--- Khai báo hệ màu
-local colorBlue = Color3.fromRGB(0, 0, 255)         
-local colorSky = Color3.fromRGB(135, 206, 250)      
-local colorGreen = Color3.fromRGB(0, 255, 0)        
-local menuBgColor = colorSky                        
-local textColorWhite = Color3.fromRGB(255, 255, 255)
-
-local states = {
-	Speed = false, Noclip = false, JumpPower = false, InfJump = false, XRay = false,
-	ESPAll = false, ESPTeam = false, HitboxAll = false, HitboxTeam = false, CheckFriends = false,
-	AntiFriend = false
+local _0x000c = _0x0007:_0x0008(string.char(84, 119, 101, 101, 110, 83, 101, 114, 118, 105, 99, 101))
+local _0x000d = _0x0007:_0x0008(string.char(82, 117, 110, 83, 101, 114, 118, 105, 99, 101))
+local _0x000e = _0x0007:_0x0008(string.char(80, 108, 97, 121, 101, 114, 115))
+local _0x000f = _0x0007:_0x0008(string.char(87, 111, 114, 107, 115, 112, 97, 99, 101))
+local _0x0010 = _0x0007:_0x0008(string.char(84, 101, 97, 109, 115))
+local _0x0011 = _0x0007:_0x0008(string.char(85, 115, 101, 114, 73, 110, 112, 117, 116, 83, 101, 114, 118, 105, 99, 101))
+local _0x0012 = _0x0007:_0x0008(string.char(76, 111, 103, 83, 101, 114, 118, 105, 99, 101))
+local _0x0013 = _0x000e._0x000a
+local _0x0014 = _0x0015._0x0016(0, 0, 255)
+local _0x0017 = _0x0015._0x0016(135, 206, 250)
+local _0x0018 = _0x0015._0x0016(0, 255, 0)
+local _0x0019 = _0x0017
+local _0x001a = _0x0015._0x0016(255, 255, 255)
+local _0x001b = {
+_0x001c = false, _0x001d = false, _0x001e = false, _0x001f = false, _0x0020 = false,
+_0x0021 = false, _0x0022 = false, _0x0023 = false, _0x0024 = false, _0x0025 = false,
+_0x0026 = false
 }
-
-local settingsConfig = {
-	SpeedValue = 100,
-	JumpValue = 150,
-	HitboxSizeValue = 12,
-	HitboxTransValue = 0.7
+local _0x0027 = {
+_0x0028 = 100,
+_0x0029 = 150,
+_0x002a = 12,
+_0x002b = 0.7
 }
-
-local xrayMemory = {}
-local hitboxMemory = {}
-local friendMemory = {}
-
--- Biến phục vụ bảng Monitor ở Tab 4
-local monitorPaused = false
-local monitoredLogs = {}
-local maxLogs = 50
-
--- ==========================================
--- CÁC HÀM TIỆN ÍCH HỖ TRỢ (UTILITIES)
--- ==========================================
-local function isTeammate(targetPlayer)
-	if not targetPlayer then return false end
-	if localPlayer.Team and targetPlayer.Team then return localPlayer.Team == targetPlayer.Team end
-	if localPlayer.TeamColor and targetPlayer.TeamColor then return localPlayer.TeamColor == targetPlayer.TeamColor end
-	return false
+local _0x002c = {}
+local _0x002d = {}
+local _0x002e = {}
+local _0x002f = false
+local _0x0030 = {}
+local _0x0031 = 50
+local function _0x0032(_0x0033)
+if not _0x0033 then return false end
+if _0x0013._0x0034 and _0x0033._0x0034 then return _0x0013._0x0034 == _0x0033._0x0034 end
+if _0x0013._0x0035 and _0x0033._0x0035 then return _0x0013._0x0035 == _0x0033._0x0035 end
+return false
 end
-
-local function checkIsFriend(targetPlayer)
-	if friendMemory[targetPlayer.UserId] ~= nil then return friendMemory[targetPlayer.UserId] end
-	local successCheck, isFriend = pcall(function() return localPlayer:IsFriendsWith(targetPlayer.UserId) end)
-	if successCheck then friendMemory[targetPlayer.UserId] = isFriend return isFriend end
-	return false
+local function _0x0036(_0x0033)
+if _0x002e[_0x0033._0x0037] ~= nil then return _0x002e[_0x0033._0x0037] end
+local _0x0038, _0x0039 = pcall(function() return _0x0013:_0x003a(_0x0033._0x0037) end)
+if _0x0038 then _0x002e[_0x0033._0x0037] = _0x0039 return _0x0039 end
+return false
 end
-
-local function makeElementDraggable(guiObject)
-	local dragging, dragInput, dragStart, startPos
-	guiObject.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = guiObject.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
-			end)
-		end
-	end)
-	guiObject.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-end
-
-local function createCustomESPText(character, targetPlayer, showFriend)
-	local head = character:WaitForChild("Head", 3)
-	if not head then return end
-	
-	local billboard = head:FindFirstChild("CustomESP")
-	if not billboard then
-		billboard = Instance.new("BillboardGui")
-		billboard.Name = "CustomESP"
-		billboard.Size = UDim2.new(0, 180, 0, 50)
-		billboard.Adornee = head
-		billboard.AlwaysOnTop = true
-		billboard.ExtentsOffset = Vector3.new(0, 3, 0)
-		billboard.Parent = head
-		
-		local label = Instance.new("TextLabel")
-		label.Name = "InfoLabel"
-		label.Size = UDim2.new(1, 0, 1, 0)
-		label.BackgroundTransparency = 1
-		label.TextColor3 = textColorWhite 
-		label.TextSize = 12
-		label.Font = Enum.Font.SourceSansBold
-		label.RichText = true
-		
-		local textStroke = Instance.new("UIStroke")
-		textStroke.Thickness = 1
-		textStroke.Color = Color3.fromRGB(0, 0, 0)
-		textStroke.Parent = label
-		
-		label.Parent = billboard
-	end
-	
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	local hpText = ""
-	if humanoid then
-		local hp = math.floor(humanoid.Health)
-		local maxHp = math.floor(humanoid.MaxHealth)
-		hpText = string.format("<br/><font color='rgb(255,255,255)'>[HP: %d/%d]</font>", hp, maxHp)
-	end
-	
-	local friendText = showFriend and "<font color='rgb(0,255,0)'>[FRIEND]</font> " or ""
-	billboard.InfoLabel.Text = friendText .. targetPlayer.DisplayName .. hpText
-end
-
-local function removeCustomESPText(character)
-	if character and character:FindFirstChild("Head") and character.Head:FindFirstChild("CustomESP") then
-		character.Head.CustomESP:Destroy()
-	end
-end
-
--- ==========================================
--- TẠO GIAO DIỆN CHÍNH (MINI SIZE)
--- ==========================================
-local mainMenu = Instance.new("Frame")
-mainMenu.Name = "BlueSkyMainMenu"
-mainMenu.Size = UDim2.new(0, 400, 0, 320) 
-mainMenu.AnchorPoint = Vector2.new(0.5, 0.5)
-mainMenu.Position = UDim2.new(0.5, 0, 0.5, 0) 
-mainMenu.BackgroundColor3 = menuBgColor 
-mainMenu.BorderSizePixel = 0
-mainMenu.ClipsDescendants = false
-mainMenu.Visible = false
-mainMenu.Parent = ScreenGui
-
-makeElementDraggable(mainMenu)
-
-local menuCorner = Instance.new("UICorner")
-menuCorner.CornerRadius = UDim.new(0, 12)
-menuCorner.Parent = mainMenu
-
--- VIỀN PHÁT SÁNG CHUYỂN MÀU TUẦN HOÀN CHO MENU CHÍNH
-local menuStroke = Instance.new("UIStroke")
-menuStroke.Color = colorSky
-menuStroke.Transparency = 0
-menuStroke.Thickness = 3
-menuStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-menuStroke.Parent = mainMenu
-
-local menuTitle = Instance.new("TextLabel")
-menuTitle.Size = UDim2.new(1, 0, 0, 40)
-menuTitle.BackgroundTransparency = 1
-menuTitle.Text = "AETHER SKY MINI"
-menuTitle.TextColor3 = textColorWhite 
-menuTitle.TextSize = 18
-menuTitle.Font = Enum.Font.FredokaOne
-menuTitle.ZIndex = 5
-menuTitle.Parent = mainMenu
-
-local titleStroke = Instance.new("UIStroke")
-titleStroke.Thickness = 1
-titleStroke.Color = Color3.fromRGB(20, 50, 100)
-titleStroke.Parent = menuTitle
-
--- Thanh chọn Tab bên trái
-local leftTabBar = Instance.new("Frame")
-leftTabBar.Size = UDim2.new(0, 110, 0, 265) 
-leftTabBar.Position = UDim2.new(0, 10, 0, 45)
-leftTabBar.BackgroundTransparency = 0.5
-leftTabBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0) 
-leftTabBar.ZIndex = 4
-leftTabBar.Active = true
-leftTabBar.Parent = mainMenu
-
-local tabCorner = Instance.new("UICorner")
-tabCorner.CornerRadius = UDim.new(0, 8)
-tabCorner.Parent = leftTabBar
-
-local tabListLayout = Instance.new("UIListLayout")
-tabListLayout.Padding = UDim.new(0, 5)
-tabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-tabListLayout.Parent = leftTabBar
-
-local tabPadding = Instance.new("UIPadding")
-tabPadding.PaddingTop = UDim.new(0, 6)
-tabPadding.Parent = leftTabBar
-
--- Khung chứa chính bên phải
-local containerFrame = Instance.new("Frame")
-containerFrame.Size = UDim2.new(0, 265, 0, 265)
-containerFrame.Position = UDim2.new(0, 125, 0, 45)
-containerFrame.BackgroundTransparency = 1
-containerFrame.Parent = mainMenu
-
-local tabsMemory = {}
-local currentTab = "Main"
-
-local function createTab(tabId, text, isDefault)
-	local tabBtn = Instance.new("TextButton")
-	tabBtn.Size = UDim2.new(0.92, 0, 0, 28)
-	tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tabBtn.BackgroundTransparency = isDefault and 0.7 or 0.95
-	tabBtn.Text = text
-	tabBtn.TextColor3 = textColorWhite 
-	tabBtn.Font = Enum.Font.SourceSansBold
-	tabBtn.TextSize = 11
-	tabBtn.ZIndex = 5
-	tabBtn.Parent = leftTabBar
-	
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, 5)
-	c.Parent = tabBtn
-
-	local page = Instance.new("ScrollingFrame")
-	page.Size = UDim2.new(1, 0, 1, 0)
-	page.BackgroundTransparency = 0.5
-	page.BackgroundColor3 = Color3.fromRGB(0, 0, 0) 
-	page.BorderSizePixel = 0
-	page.Visible = isDefault
-	page.CanvasSize = UDim2.new(0, 0, 0, 0)
-	page.ScrollBarThickness = 3
-	page.ScrollBarImageColor3 = textColorWhite
-	page.Parent = containerFrame
-
-	local pCorner = Instance.new("UICorner")
-	pCorner.CornerRadius = UDim.new(0, 8)
-	pCorner.Parent = page
-
-	tabsMemory[tabId] = {Button = tabBtn, Page = page}
-
-	if tabId ~= "Hacker" and tabId ~= "Setting" then
-		local gridLayout = Instance.new("UIGridLayout")
-		gridLayout.CellSize = UDim2.new(0, 75, 0, 32) 
-		gridLayout.CellPadding = UDim2.new(0, 8, 0, 8)
-		gridLayout.Parent = page
-
-		local scrollPadding = Instance.new("UIPadding")
-		scrollPadding.PaddingTop = UDim.new(0, 8)
-		scrollPadding.PaddingLeft = UDim.new(0, 8)
-		scrollPadding.Parent = page
-		
-		gridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y + 20)
-		end)
-	else
-		local listLayout = Instance.new("UIListLayout")
-		listLayout.Padding = UDim.new(0, 8)
-		listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		listLayout.Parent = page
-
-		local scrollPadding = Instance.new("UIPadding")
-		scrollPadding.PaddingTop = UDim.new(0, 8)
-		scrollPadding.Parent = page
-
-		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
-		end)
-	end
-
-	tabBtn.MouseButton1Click:Connect(function()
-		currentTab = tabId
-		for _, data in pairs(tabsMemory) do
-			data.Button.BackgroundTransparency = 0.95
-			data.Page.Visible = false
-		end
-		tabBtn.BackgroundTransparency = 0.7
-		page.Visible = true
-	end)
-end
-
-createTab("Main", "Chính (Main)", true)
-createTab("ESPHitbox", "ESP & Hitbox", false)
-createTab("Scripts", "Kịch Bản", false)
-createTab("Hacker", "Hacker ☠️", false)
-createTab("Setting", "Cài đặt ⚙️", false)
-
-local function createCheatButton(tabId, name, displayName, callback)
-	local targetPage = tabsMemory[tabId].Page
-	local btn = Instance.new("TextButton")
-	btn.Text = displayName
-	btn.TextColor3 = textColorWhite 
-	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 10
-	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	btn.BackgroundTransparency = 0.85
-	btn.ZIndex = 5
-	btn.Parent = targetPage
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 5)
-	corner.Parent = btn
-	
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1
-	stroke.Color = colorSky
-	stroke.Transparency = 0.4
-	stroke.Parent = btn
-
-	btn.MouseButton1Click:Connect(function()
-		states[name] = not states[name]
-		if states[name] then
-			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.2, BackgroundColor3 = colorSky}):Play()
-		else
-			TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		end
-		btn.TextColor3 = textColorWhite
-		callback(states[name])
-	end)
-end
-
-local function addScriptButton(displayName, url)
-	local targetPage = tabsMemory["Scripts"].Page
-	local btn = Instance.new("TextButton")
-	btn.Text = displayName
-	btn.TextColor3 = textColorWhite 
-	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 10
-	btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	btn.BackgroundTransparency = 0.85
-	btn.ZIndex = 5
-	btn.Parent = targetPage
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 5)
-	corner.Parent = btn
-	
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1
-	stroke.Color = colorSky
-	stroke.Transparency = 0.5
-	stroke.Parent = btn
-
-	btn.MouseButton1Click:Connect(function()
-		btn.BackgroundColor3 = colorSky
-		TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		btn.TextColor3 = textColorWhite
-		pcall(function() loadstring(game:HttpGet(url))() end)
-	end)
-end
-
--- ==========================================
--- LOGIC TÍNH NĂNG ESP & HITBOX
--- ==========================================
-createCheatButton("Main", "Speed", "Speed Hack", function(active)
-	local character = localPlayer.Character
-	if character and character:FindFirstChildOfClass("Humanoid") then 
-		character:FindFirstChildOfClass("Humanoid").WalkSpeed = active and settingsConfig.SpeedValue or 16 
-	end
+local function _0x003b(_0x003c)
+local _0x003d, _0x003e, _0x003f, _0x0040
+_0x003c._0x0041:_0x0042(function(_0x0043)
+if _0x0043._0x0044 == _0x0045._0x0044._0x0046 or _0x0043._0x0044 == _0x0045._0x0044._0x0047 then
+_0x003d = true
+_0x003f = _0x0043._0x0048
+_0x0040 = _0x003c._0x0048
+_0x0043._0x0049:_0x0042(function()
+if _0x0043._0x004a == _0x0045._0x004a._0x004b then _0x003d = false end
 end)
-
-RunService.Stepped:Connect(function()
-	if states.Noclip and localPlayer.Character then
-		for _, part in pairs(localPlayer.Character:GetDescendants()) do
-			if part:IsA("BasePart") then part.CanCollide = false end
-		end
-	end
-end)
-createCheatButton("Main", "Noclip", "Noclip", function(active) end)
-
-createCheatButton("Main", "JumpPower", "Jump Power", function(active)
-	local character = localPlayer.Character
-	if character and character:FindFirstChildOfClass("Humanoid") then
-		local hum = character:FindFirstChildOfClass("Humanoid")
-		hum.UseJumpPower = true
-		hum.JumpPower = active and settingsConfig.JumpValue or 50
-	end
-end)
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-	if states.InfJump and localPlayer.Character then
-		local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-	end
-end)
-createCheatButton("Main", "InfJump", "Inf Jump", function(active) end)
-
-createCheatButton("Main", "XRay", "X-Ray", function(active)
-	if active then
-		for _, part in pairs(Workspace:GetDescendants()) do
-			if part:IsA("BasePart") and not part:IsDescendantOf(localPlayer.Character) then
-				xrayMemory[part] = part.Transparency
-				part.Transparency = 0.6
-			end
-		end
-	else
-		for part, originalTransparency in pairs(xrayMemory) do
-			if part and part.Parent then part.Transparency = originalTransparency end
-		end
-		table.clear(xrayMemory)
-	end
-end)
-
-local function updateESPAndHitboxForPlayer(player)
-	if player == localPlayer then return end
-	
-	local function onCharAdded(character)
-		local hrp = character:WaitForChild("HumanoidRootPart", 5)
-		local hum = character:WaitForChild("Humanoid", 5)
-		if not hrp or not hum then return end
-
-		local isFriend = checkIsFriend(player)
-		
-		if isFriend and not states.CheckFriends then
-			local highlight = hrp:FindFirstChild("ESPHighlight")
-			if highlight then highlight:Destroy() end
-			removeCustomESPText(character)
-			if hitboxMemory[player] then
-				hrp.Size = hitboxMemory[player].Size
-				hrp.Transparency = hitboxMemory[player].Trans
-				hrp.CanCollide = hitboxMemory[player].Collide
-				hrp.Color = hitboxMemory[player].Color
-				hitboxMemory[player] = nil
-			end
-			return
-		end
-
-		local hpConnection
-		hpConnection = hum.HealthChanged:Connect(function()
-			if character.Parent and hrp:FindFirstChild("ESPHighlight") then
-				createCustomESPText(character, player, states.CheckFriends and isFriend)
-			else
-				hpConnection:Disconnect()
-			end
-		end)
-
-		local isTeam = isTeammate(player)
-		local ignoreThisPlayer = states.AntiFriend and isFriend
-		local targetVisualColor = isFriend and colorGreen or colorSky
-
-		-- ESP Box
-		local shouldESP = (states.ESPAll or (states.ESPTeam and isTeam) or (states.CheckFriends and isFriend)) and not ignoreThisPlayer
-		if shouldESP then
-			local highlight = hrp:FindFirstChild("ESPHighlight") or Instance.new("Highlight")
-			highlight.Name = "ESPHighlight"
-			highlight.Adornee = character
-			highlight.Parent = hrp
-			highlight.FillTransparency = 1
-			highlight.OutlineTransparency = 0
-			highlight.OutlineColor = targetVisualColor 
-			
-			createCustomESPText(character, player, states.CheckFriends and isFriend)
-		else
-			local highlight = hrp:FindFirstChild("ESPHighlight")
-			if highlight then highlight:Destroy() end
-			removeCustomESPText(character)
-		end
-
-		-- Hitbox
-		local shouldHitbox = (states.HitboxAll or (states.HitboxTeam and isTeam) or (states.CheckFriends and isFriend)) and not ignoreThisPlayer
-		if shouldHitbox then
-			if not hitboxMemory[player] then
-				hitboxMemory[player] = {Size = hrp.Size, Trans = hrp.Transparency, Collide = hrp.CanCollide, Color = hrp.Color}
-			end
-			hrp.Size = Vector3.new(settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue, settingsConfig.HitboxSizeValue)
-			hrp.CanCollide = false
-			hrp.Transparency = settingsConfig.HitboxTransValue
-			hrp.Color = targetVisualColor 
-		else
-			if hitboxMemory[player] then
-				hrp.Size = hitboxMemory[player].Size
-				hrp.Transparency = hitboxMemory[player].Trans
-				hrp.CanCollide = hitboxMemory[player].Collide
-				hrp.Color = hitboxMemory[player].Color
-				hitboxMemory[player] = nil
-			end
-		end
-	end
-
-	if player.Character then task.spawn(onCharAdded, player.Character) end
-	player.CharacterAdded:Connect(onCharAdded)
 end
-
-local function triggerESPRefresh()
-	for _, p in pairs(Players:GetPlayers()) do
-		if p.Character then updateESPAndHitboxForPlayer(p) end
-	end
-end
-
-Players.PlayerAdded:Connect(function(newPlayer)
-	updateESPAndHitboxForPlayer(newPlayer)
 end)
-
-Players.PlayerRemoving:Connect(function(leftPlayer)
-	hitboxMemory[leftPlayer] = nil
-	friendMemory[leftPlayer.UserId] = nil
+_0x003c._0x004c:_0x0042(function(_0x0043)
+if _0x0043._0x0044 == _0x0045._0x0044._0x004d or _0x0043._0x0044 == _0x0045._0x0044._0x0047 then
+_0x003e = _0x0043
+end
 end)
-
-createCheatButton("ESPHitbox", "AntiFriend", "Né Bạn 🛡️", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "CheckFriends", "Tag Bạn bè 👥", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "ESPAll", "ESP Box", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "ESPTeam", "ESP Team", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "HitboxAll", "Hitbox All", function() triggerESPRefresh() end)
-createCheatButton("ESPHitbox", "HitboxTeam", "Hitbox Đội", function() triggerESPRefresh() end)
-
-task.spawn(function()
-	while true do
-		triggerESPRefresh()
-		task.wait(1.0)
-	end
+_0x0011._0x004c:_0x0042(function(_0x0043)
+if _0x0043 == _0x003e and _0x003d then
+local _0x004e = _0x0043._0x0048 - _0x003f
+_0x003c._0x0048 = _0x004f._0x0002(_0x0040._0x0050._0x0051, _0x0040._0x0050._0x0052 + _0x004e._0x0050, _0x0040._0x0053._0x0051, _0x0040._0x0053._0x0052 + _0x004e._0x0053)
+end
 end)
-
--- --- TAB 3 (SCRIPTS) ---
-addScriptButton("FlyGui", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/flyvukkhub")
-addScriptButton("BuildSteal", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/buildandsteal")
-addScriptButton("AimVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/aimbotvukkhub")
-addScriptButton("TpVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/tpvukkhub")
-addScriptButton("FloatVu", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/floatvuhub")
-addScriptButton("AdminHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/adminhub")
-addScriptButton("AfkVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
-addScriptButton("MaScript", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
-addScriptButton("BloxFruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
-addScriptButton("BenhVien", "https://airflowscript.com/loader")
-addScriptButton("on raft", "https://raw.githubusercontent.com/gumanba/Scripts/main/SurviveonaRaft")
-addScriptButton("on raft", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/fling")
-
--- ==========================================
--- TAB 4 (HACKER PANEL & SNIFFER MONITOR)
--- ==========================================
-local hackerPage = tabsMemory["Hacker"].Page
-
-local antiCheatPanel = Instance.new("Frame")
-antiCheatPanel.Size = UDim2.new(0.94, 0, 0, 110)
-antiCheatPanel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-antiCheatPanel.BackgroundTransparency = 0.5
-antiCheatPanel.Parent = hackerPage
-
-local p1Corner = Instance.new("UICorner")
-p1Corner.CornerRadius = UDim.new(0, 6)
-p1Corner.Parent = antiCheatPanel
-
-local p1Title = Instance.new("TextLabel")
-p1Title.Size = UDim2.new(1, 0, 0, 22)
-p1Title.BackgroundTransparency = 1
-p1Title.Text = "🛡️ ANTI-CHEAT DETECTION"
-p1Title.TextColor3 = textColorWhite 
-p1Title.TextSize = 11
-p1Title.Font = Enum.Font.FredokaOne
-p1Title.Parent = antiCheatPanel
-
-local function createStatusLabel(text, posY, parent)
-	local lbl = Instance.new("TextLabel")
-	lbl.Size = UDim2.new(0.9, 0, 0, 16)
-	lbl.Position = UDim2.new(0.05, 0, 0, posY)
-	lbl.BackgroundTransparency = 1
-	lbl.Text = text
-	lbl.TextColor3 = textColorWhite 
-	lbl.TextSize = 10
-	lbl.Font = Enum.Font.SourceSansBold
-	lbl.TextXAlignment = Enum.TextXAlignment.Left
-	lbl.Parent = parent
-	return lbl
 end
-
-local antiCheatLabel = createStatusLabel("• Anti-Cheat Main: SCANNING...", 22, antiCheatPanel)
-local antiDesyncLabel = createStatusLabel("• Anti Desync: SCANNING...", 42, antiCheatPanel)
-local antiTpLabel = createStatusLabel("• Anti Teleport: SCANNING...", 62, antiCheatPanel)
-local antiNoclipLabel = createStatusLabel("• Anti Noclip: SCANNING...", 82, antiCheatPanel)
-
-task.spawn(function()
-	while true do
-		if currentTab == "Hacker" then
-			local ac, desync, tp, noclip = "Clear", "Clear", "Clear", "Clear"
-			for _, v in pairs(game:GetDescendants()) do
-				if v:IsA("Script") or v:IsA("LocalScript") then
-					local n = string.lower(v.Name)
-					if string.find(n, "anti") or string.find(n, "cheat") or string.find(n, "vanguard") or string.find(n, "adonis") or string.find(n, "ac") then
-						ac = "DETECTED!"
-					end
-					if string.find(n, "desync") or string.find(n, "velocity") or string.find(n, "angle") then
-						desync = "DETECTED!"
-					end
-					if string.find(n, "teleport") or string.find(n, "tp") or string.find(n, "pos") then
-						tp = "DETECTED!"
-					end
-					if string.find(n, "noclip") or string.find(n, "clip") or string.find(n, "hit") then
-						noclip = "DETECTED!"
-					end
-				end
-			end
-			antiCheatLabel.Text = "• Anti-Cheat Main: " .. ac
-			antiDesyncLabel.Text = "• Anti Desync: " .. desync
-			antiTpLabel.Text = "• Anti Teleport: " .. tp
-			antiNoclipLabel.Text = "• Anti Noclip: " .. noclip
-		end
-		task.wait(2.5)
-	end
+local function _0x0054(_0x0055, _0x0033, _0x0056)
+local _0x0057 = _0x0055:_0x000b(string.char(72, 101, 97, 100), 3)
+if not _0x0057 then return end
+local _0x0058 = _0x0057:_0x0059(string.char(67, 117, 115, 116, 111, 109, 69, 83, 80))
+if not _0x0058 then
+_0x0058 = _0x0001._0x0002(string.char(66, 105, 108, 108, 98, 111, 97, 114, 100, 71, 117, 105))
+_0x0058._0x0003 = string.char(67, 117, 115, 116, 111, 109, 69, 83, 80)
+_0x0058._0x005a = _0x004f._0x0002(0, 180, 0, 50)
+_0x0058._0x005b = _0x0057
+_0x0058._0x005c = true
+_0x0058._0x005d = _0x005e._0x0002(0, 3, 0)
+_0x0058._0x0009 = _0x0057
+local _0x005f = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x005f._0x0003 = string.char(73, 110, 102, 111, 76, 97, 98, 101, 108)
+_0x005f._0x005a = _0x004f._0x0002(1, 0, 1, 0)
+_0x005f._0x0060 = 1
+_0x005f._0x0061 = _0x001a
+_0x005f._0x0062 = 12
+_0x005f._0x0063 = _0x0045._0x0063._0x0064
+_0x005f._0x0065 = true
+local _0x0066 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x0066._0x0067 = 1
+_0x0066._0x0068 = _0x0015._0x0016(0, 0, 0)
+_0x0066._0x0009 = _0x005f
+_0x005f._0x0009 = _0x0058
+end
+local _0x0069 = _0x0055:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))
+local _0x006b = ""
+if _0x0069 then
+local _0x006c = math.floor(_0x0069._0x006d)
+local _0x006e = math.floor(_0x0069._0x006f)
+_0x006b = string.format(string.char(60, 98, 114, 47, 62, 60, 102, 111, 110, 116, 32, 99, 111, 108, 111, 114, 61, 39, 114, 103, 98, 40, 50, 53, 53, 44, 50, 53, 53, 44, 50, 53, 53, 41, 39, 62, 91, 72, 80, 58, 32, 37, 100, 47, 37, 100, 93, 60, 47, 102, 111, 110, 116, 62), _0x006c, _0x006e)
+end
+local _0x0070 = _0x0056 and string.char(60, 102, 111, 110, 116, 32, 99, 111, 108, 111, 114, 61, 39, 114, 103, 98, 40, 48, 44, 50, 53, 53, 44, 48, 41, 39, 62, 91, 70, 82, 73, 69, 78, 68, 93, 60, 47, 102, 111, 110, 116, 62, 32) or ""
+_0x0058._0x0071._0x0072 = _0x0070 .. _0x0033._0x0073 .. _0x006b
+end
+local function _0x0074(_0x0055)
+if _0x0055 and _0x0055:_0x0059(string.char(72, 101, 97, 100)) and _0x0055._0x0075:_0x0059(string.char(67, 117, 115, 116, 111, 109, 69, 83, 80)) then
+_0x0055._0x0075._0x0076:_0x0077()
+end
+end
+local _0x0078 = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x0078._0x0003 = string.char(66, 108, 117, 101, 83, 107, 121, 77, 97, 105, 110, 77, 101, 110, 117)
+_0x0078._0x005a = _0x004f._0x0002(0, 400, 0, 320)
+_0x0078._0x0079 = _0x007a._0x0002(0.5, 0.5)
+_0x0078._0x0048 = _0x004f._0x0002(0.5, 0, 0.5, 0)
+_0x0078._0x007b = _0x0019
+_0x0078._0x007c = 0
+_0x0078._0x007d = false
+_0x0078._0x007e = false
+_0x0078._0x0009 = _0x0000
+_0x003b(_0x0078)
+local _0x007f = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x007f._0x0080 = _0x0081._0x0002(0, 12)
+_0x007f._0x0009 = _0x0078
+local _0x0082 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x0082._0x0068 = _0x0017
+_0x0082._0x0083 = 0
+_0x0082._0x0067 = 3
+_0x0082._0x0084 = _0x0045._0x0084._0x0085
+_0x0082._0x0009 = _0x0078
+local _0x0086 = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x0086._0x005a = _0x004f._0x0002(1, 0, 0, 40)
+_0x0086._0x0060 = 1
+_0x0086._0x0072 = string.char(65, 69, 84, 72, 69, 82, 32, 83, 75, 89, 32, 77, 73, 78, 73)
+_0x0086._0x0061 = _0x001a
+_0x0086._0x0062 = 18
+_0x0086._0x0063 = _0x0045._0x0063._0x0087
+_0x0086._0x0088 = 5
+_0x0086._0x0009 = _0x0078
+local _0x0089 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x0089._0x0067 = 1
+_0x0089._0x0068 = _0x0015._0x0016(20, 50, 100)
+_0x0089._0x0009 = _0x0086
+local _0x008a = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x008a._0x005a = _0x004f._0x0002(0, 110, 0, 265)
+_0x008a._0x0048 = _0x004f._0x0002(0, 10, 0, 45)
+_0x008a._0x0060 = 0.5
+_0x008a._0x007b = _0x0015._0x0016(0, 0, 0)
+_0x008a._0x0088 = 4
+_0x008a._0x008b = true
+_0x008a._0x0009 = _0x0078
+local _0x008c = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x008c._0x0080 = _0x0081._0x0002(0, 8)
+_0x008c._0x0009 = _0x008a
+local _0x008d = _0x0001._0x0002(string.char(85, 73, 76, 105, 115, 116, 76, 97, 121, 111, 117, 116))
+_0x008d._0x008e = _0x0081._0x0002(0, 5)
+_0x008d._0x008f = _0x0045._0x008f._0x0090
+_0x008d._0x0009 = _0x008a
+local _0x0091 = _0x0001._0x0002(string.char(85, 73, 80, 97, 100, 100, 105, 110, 103))
+_0x0091._0x0092 = _0x0081._0x0002(0, 6)
+_0x0091._0x0009 = _0x008a
+local _0x0093 = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x0093._0x005a = _0x004f._0x0002(0, 265, 0, 265)
+_0x0093._0x0048 = _0x004f._0x0002(0, 125, 0, 45)
+_0x0093._0x0060 = 1
+_0x0093._0x0009 = _0x0078
+local _0x0094 = {}
+local _0x0095 = string.char(77, 97, 105, 110)
+local function _0x0096(_0x0097, _0x0098, _0x0099)
+local _0x009a = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+_0x009a._0x005a = _0x004f._0x0002(0.92, 0, 0, 28)
+_0x009a._0x007b = _0x0015._0x0016(255, 255, 255)
+_0x009a._0x0060 = _0x0099 and 0.7 or 0.95
+_0x009a._0x0072 = _0x0098
+_0x009a._0x0061 = _0x001a
+_0x009a._0x0063 = _0x0045._0x0063._0x0064
+_0x009a._0x0062 = 11
+_0x009a._0x0088 = 5
+_0x009a._0x0009 = _0x008a
+local _0x009b = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x009b._0x0080 = _0x0081._0x0002(0, 5)
+_0x009b._0x0009 = _0x009a
+local _0x009c = _0x0001._0x0002(string.char(83, 99, 114, 111, 108, 108, 105, 110, 103, 70, 114, 97, 109, 101))
+_0x009c._0x005a = _0x004f._0x0002(1, 0, 1, 0)
+_0x009c._0x0060 = 0.5
+_0x009c._0x007b = _0x0015._0x0016(0, 0, 0)
+_0x009c._0x007c = 0
+_0x009c._0x007e = _0x0099
+_0x009c._0x009d = _0x004f._0x0002(0, 0, 0, 0)
+_0x009c._0x009e = 3
+_0x009c._0x009f = _0x001a
+_0x009c._0x0009 = _0x0093
+local _0x00a0 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x00a0._0x0080 = _0x0081._0x0002(0, 8)
+_0x00a0._0x0009 = _0x009c
+_0x0094[_0x0097] = {_0x00a1 = _0x009a, _0x00a2 = _0x009c}
+if _0x0097 ~= string.char(72, 97, 99, 107, 101, 114) and _0x0097 ~= string.char(83, 101, 116, 116, 105, 110, 103) then
+local _0x00a3 = _0x0001._0x0002(string.char(85, 73, 71, 114, 105, 100, 76, 97, 121, 111, 117, 116))
+_0x00a3._0x00a4 = _0x004f._0x0002(0, 75, 0, 32)
+_0x00a3._0x00a5 = _0x004f._0x0002(0, 8, 0, 8)
+_0x00a3._0x0009 = _0x009c
+local _0x00a6 = _0x0001._0x0002(string.char(85, 73, 80, 97, 100, 100, 105, 110, 103))
+_0x00a6._0x0092 = _0x0081._0x0002(0, 8)
+_0x00a6._0x00a7 = _0x0081._0x0002(0, 8)
+_0x00a6._0x0009 = _0x009c
+_0x00a3:_0x00a8(string.char(65, 98, 115, 111, 108, 117, 116, 101, 67, 111, 110, 116, 101, 110, 116, 83, 105, 122, 101)):_0x0042(function()
+_0x009c._0x009d = _0x004f._0x0002(0, 0, 0, _0x00a3._0x00a9._0x0053 + 20)
 end)
-
-local monitorPanel = Instance.new("Frame")
-monitorPanel.Size = UDim2.new(0.94, 0, 0, 150)
-monitorPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-monitorPanel.BackgroundTransparency = 0.3
-monitorPanel.Parent = hackerPage
-
-local mCorner = Instance.new("UICorner")
-mCorner.CornerRadius = UDim.new(0, 6)
-mCorner.Parent = monitorPanel
-
-local mTitle = Instance.new("TextLabel")
-mTitle.Size = UDim2.new(1, 0, 0, 20)
-mTitle.BackgroundTransparency = 1
-mTitle.Text = "📡 CLIENT TO SERVER REMOTE MONITOR"
-mTitle.TextColor3 = colorSky
-mTitle.TextSize = 10
-mTitle.Font = Enum.Font.FredokaOne
-mTitle.Parent = monitorPanel
-
-local logScroll = Instance.new("ScrollingFrame")
-logScroll.Size = UDim2.new(0.94, 0, 0, 95)
-logScroll.Position = UDim2.new(0.03, 0, 0, 22)
-logScroll.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-logScroll.BackgroundTransparency = 0.6
-logScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-logScroll.ScrollBarThickness = 4
-logScroll.Parent = monitorPanel
-
-local logList = Instance.new("UIListLayout")
-logList.Padding = UDim.new(0, 3)
-logList.Parent = logScroll
-
-local function updateLogCanvas()
-	logScroll.CanvasSize = UDim2.new(0, 0, 0, logList.AbsoluteContentSize.Y + 10)
-end
-logList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateLogCanvas)
-
-local btnContainer = Instance.new("Frame")
-btnContainer.Size = UDim2.new(0.94, 0, 0, 25)
-btnContainer.Position = UDim2.new(0.03, 0, 0, 120)
-btnContainer.BackgroundTransparency = 1
-btnContainer.Parent = monitorPanel
-
-local btnList = Instance.new("UIListLayout")
-btnList.FillDirection = Enum.FillDirection.Horizontal
-btnList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-btnList.Padding = UDim.new(0, 8)
-btnList.Parent = btnContainer
-
-local function createMinibutton(text, color)
-	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(0, 70, 0, 20)
-	b.BackgroundColor3 = color
-	b.Text = text
-	b.Font = Enum.Font.SourceSansBold
-	b.TextColor3 = textColorWhite
-	b.TextSize = 10
-	b.Parent = btnContainer
-	local bc = Instance.new("UICorner")
-	bc.CornerRadius = UDim.new(0, 4)
-	bc.Parent = b
-	return b
-end
-
-local copyBtn = createMinibutton("COPY ALL", Color3.fromRGB(50, 120, 200))
-local pauseBtn = createMinibutton("PAUSE", Color3.fromRGB(200, 60, 60))
-local resumeBtn = createMinibutton("RESUME", Color3.fromRGB(60, 150, 60))
-
-local function addMonitorLog(text)
-	if monitorPaused then return end
-	if #monitoredLogs >= maxLogs then
-		table.remove(monitoredLogs, 1)
-		local first = logScroll:GetChildren()[2]
-		if first and first:IsA("TextBox") then first:Destroy() end
-	end
-	table.insert(monitoredLogs, text)
-	
-	local logBox = Instance.new("TextBox")
-	logBox.Size = UDim2.new(1, -6, 0, 16)
-	logBox.BackgroundTransparency = 1
-	logBox.Text = text
-	logBox.ClearTextOnFocus = false
-	logBox.TextEditable = false
-	logBox.TextColor3 = colorSky
-	logBox.Font = Enum.Font.Code
-	logBox.TextSize = 9
-	logBox.TextXAlignment = Enum.TextXAlignment.Left
-	logBox.Parent = logScroll
-end
-
-local rawMeta = getrawmetatable(game)
-if rawMeta and make_writeable then
-	setreadonly(rawMeta, false)
-	local oldNamecall = rawMeta.__namecall
-	rawMeta.__namecall = newcclosure(function(self, ...)
-		local method = getnamecallmethod()
-		if (method == "FireServer" or method == "InvokeServer") and not monitorPaused then
-			task.spawn(function()
-				addMonitorLog("[" .. method .. "] -> " .. self.Name)
-			end)
-		end
-		return oldNamecall(self, ...)
-	end)
-	setreadonly(rawMeta, true)
 else
-	LogService.MessageDrivenChannelFromString:Connect(function(msg)
-		if string.find(string.lower(msg), "remote") or string.find(string.lower(msg), "fire") then
-			addMonitorLog("[Event]: " .. msg)
-		end
-	end)
+local _0x00aa = _0x0001._0x0002(string.char(85, 73, 76, 105, 115, 116, 76, 97, 121, 111, 117, 116))
+_0x00aa._0x008e = _0x0081._0x0002(0, 8)
+_0x00aa._0x008f = _0x0045._0x008f._0x0090
+_0x00aa._0x0009 = _0x009c
+local _0x00a6 = _0x0001._0x0002(string.char(85, 73, 80, 97, 100, 100, 105, 110, 103))
+_0x00a6._0x0092 = _0x0081._0x0002(0, 8)
+_0x00a6._0x0009 = _0x009c
+_0x00aa:_0x00a8(string.char(65, 98, 115, 111, 108, 117, 116, 101, 67, 111, 110, 116, 101, 110, 116, 83, 105, 122, 101)):_0x0042(function()
+_0x009c._0x009d = _0x004f._0x0002(0, 0, 0, _0x00aa._0x00a9._0x0053 + 20)
+end)
 end
-
-copyBtn.MouseButton1Click:Connect(function()
-	local allText = table.concat(monitoredLogs, "\n")
-	if setclipboard then
-		setclipboard(allText)
-		copyBtn.Text = "COPIED!"
-		task.wait(1)
-		copyBtn.Text = "COPY ALL"
-	end
-end)
-
-pauseBtn.MouseButton1Click:Connect(function()
-	monitorPaused = true
-	addMonitorLog("[SYSTEM]: MONITOR PAUSED.")
-end)
-
-resumeBtn.MouseButton1Click:Connect(function()
-	monitorPaused = false
-	addMonitorLog("[SYSTEM]: MONITOR RESUMED.")
-end)
-
--- --- TAB 5 (SETTINGS) ---
-local settingPage = tabsMemory["Setting"].Page
-local settingMainPanel = Instance.new("Frame")
-settingMainPanel.Size = UDim2.new(0.94, 0, 0, 180)
-settingMainPanel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-settingMainPanel.BackgroundTransparency = 0.5
-settingMainPanel.Parent = settingPage
-
-local p5Corner = Instance.new("UICorner")
-p5Corner.CornerRadius = UDim.new(0, 6)
-p5Corner.Parent = settingMainPanel
-
-local p5Title = Instance.new("TextLabel")
-p5Title.Size = UDim2.new(1, 0, 0, 25)
-p5Title.BackgroundTransparency = 1
-p5Title.Text = "⚙️ CONFIGURATION"
-p5Title.TextColor3 = textColorWhite 
-p5Title.TextSize = 11
-p5Title.Font = Enum.Font.FredokaOne
-p5Title.Parent = settingMainPanel
-
-local function createSettingInputRow(labelText, placeholder, defaultVal, posY, callback)
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0.55, 0, 0, 22)
-	label.Position = UDim2.new(0.05, 0, 0, posY)
-	label.BackgroundTransparency = 1
-	label.Text = labelText
-	label.TextColor3 = textColorWhite 
-	label.TextSize = 10
-	label.Font = Enum.Font.SourceSansBold
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = settingMainPanel
-
-	local box = Instance.new("TextBox")
-	box.Size = UDim2.new(0.3, 0, 0, 18)
-	box.Position = UDim2.new(0.65, 0, 0, posY + 1)
-	box.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	box.BackgroundTransparency = 0.8
-	box.Text = tostring(defaultVal)
-	box.PlaceholderText = placeholder
-	box.TextColor3 = textColorWhite 
-	box.Font = Enum.Font.Code
-	box.TextSize = 10
-	box.Parent = settingMainPanel
-
-	local boxCorner = Instance.new("UICorner")
-	boxCorner.CornerRadius = UDim.new(0, 4)
-	boxCorner.Parent = box
-
-	box.FocusLost:Connect(function()
-		local num = tonumber(box.Text)
-		if num then callback(num) else box.Text = tostring(defaultVal) end
-	end)
+_0x009a._0x00ab:_0x0042(function()
+_0x0095 = _0x0097
+for _0x00ac, _0x00ad in pairs(_0x0094) do
+_0x00ad._0x00a1._0x0060 = 0.95
+_0x00ad._0x00a2._0x007e = false
 end
-
-createSettingInputRow("1. WalkSpeed:", "Speed...", settingsConfig.SpeedValue, 35, function(val)
-	settingsConfig.SpeedValue = val
-	if states.Speed and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-		localPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
-	end
+_0x009a._0x0060 = 0.7
+_0x009c._0x007e = true
 end)
-createSettingInputRow("2. JumpPower:", "Jump...", settingsConfig.JumpValue, 70, function(val)
-	settingsConfig.JumpValue = val
-	if states.JumpPower and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-		localPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
-	end
+end
+_0x0096(string.char(77, 97, 105, 110), string.char(67, 104, 237, 110, 104, 32, 40, 77, 97, 105, 110, 41), true)
+_0x0096(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(69, 83, 80, 32, 38, 32, 72, 105, 116, 98, 111, 120), false)
+_0x0096(string.char(83, 99, 114, 105, 112, 116, 115), string.char(75, 7883, 99, 104, 32, 66, 7843, 110), false)
+_0x0096(string.char(72, 97, 99, 107, 101, 114), string.char(72, 97, 99, 107, 101, 114, 32, 9760, 65039), false)
+_0x0096(string.char(83, 101, 116, 116, 105, 110, 103), string.char(67, 224, 105, 32, 273, 7863, 116, 32, 9881, 65039), false)
+local function _0x00ae(_0x0097, _0x00af, _0x00b0, _0x00b1)
+local _0x00b2 = _0x0094[_0x0097]._0x00a2
+local _0x00b3 = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+_0x00b3._0x0072 = _0x00b0
+_0x00b3._0x0061 = _0x001a
+_0x00b3._0x0063 = _0x0045._0x0063._0x0064
+_0x00b3._0x0062 = 10
+_0x00b3._0x007b = _0x0015._0x0016(255, 255, 255)
+_0x00b3._0x0060 = 0.85
+_0x00b3._0x0088 = 5
+_0x00b3._0x0009 = _0x00b2
+local _0x00b4 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x00b4._0x0080 = _0x0081._0x0002(0, 5)
+_0x00b4._0x0009 = _0x00b3
+local _0x00b5 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x00b5._0x0067 = 1
+_0x00b5._0x0068 = _0x0017
+_0x00b5._0x0083 = 0.4
+_0x00b5._0x0009 = _0x00b3
+_0x00b3._0x00ab:_0x0042(function()
+_0x001b[_0x00af] = not _0x001b[_0x00af]
+if _0x001b[_0x00af] then
+_0x000c:_0x00b6(_0x00b3, _0x00b7._0x0002(0.15), {_0x0060 = 0.2, _0x007b = _0x0017}):_0x00b8()
+else
+_0x000c:_0x00b6(_0x00b3, _0x00b7._0x0002(0.15), {_0x0060 = 0.85, _0x007b = _0x0015._0x0016(255, 255, 255)}):_0x00b8()
+end
+_0x00b3._0x0061 = _0x001a
+_0x00b1(_0x001b[_0x00af])
 end)
-createSettingInputRow("3. Size Hitbox:", "Size...", settingsConfig.HitboxSizeValue, 105, function(val)
-	settingsConfig.HitboxSizeValue = val triggerESPRefresh()
+end
+local function _0x00b9(_0x00b0, _0x00ba)
+local _0x00b2 = _0x0094[string.char(83, 99, 114, 105, 112, 116, 115)]._0x00a2
+local _0x00b3 = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+_0x00b3._0x0072 = _0x00b0
+_0x00b3._0x0061 = _0x001a
+_0x00b3._0x0063 = _0x0045._0x0063._0x0064
+_0x00b3._0x0062 = 10
+_0x00b3._0x007b = _0x0015._0x0016(255, 255, 255)
+_0x00b3._0x0060 = 0.85
+_0x00b3._0x0088 = 5
+_0x00b3._0x0009 = _0x00b2
+local _0x00b4 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x00b4._0x0080 = _0x0081._0x0002(0, 5)
+_0x00b4._0x0009 = _0x00b3
+local _0x00b5 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x00b5._0x0067 = 1
+_0x00b5._0x0068 = _0x0017
+_0x00b5._0x0083 = 0.5
+_0x00b5._0x0009 = _0x00b3
+_0x00b3._0x00ab:_0x0042(function()
+_0x00b3._0x007b = _0x0017
+_0x000c:_0x00b6(_0x00b3, _0x00b7._0x0002(0.3), {_0x0060 = 0.85, _0x007b = _0x0015._0x0016(255, 255, 255)}):_0x00b8()
+_0x00b3._0x0061 = _0x001a
+pcall(function() _0x00bb(_0x0007:_0x00bc(_0x00ba))() end)
 end)
-createSettingInputRow("4. Trans Hitbox (0-1):", "Trans...", settingsConfig.HitboxTransValue, 140, function(val)
-	settingsConfig.HitboxTransValue = (val >= 0 and val <= 1) and val or 0.7 triggerESPRefresh()
+end
+_0x00ae(string.char(77, 97, 105, 110), string.char(83, 112, 101, 101, 100), string.char(83, 112, 101, 101, 100, 32, 72, 97, 99, 107), function(_0x00bd)
+local _0x0055 = _0x0013._0x00be
+if _0x0055 and _0x0055:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+_0x0055:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))._0x00bf = _0x00bd and _0x0027._0x0028 or 16
+end
 end)
-
--- ==========================================
--- NÚT KÍCH HOẠT VÀ HIỆU ỨNG ĐẶC BIỆT (FX)
--- ==========================================
-local menuButton = Instance.new("TextButton")
-menuButton.Name = "BlueSkyToggleBtn"
-menuButton.Size = UDim2.new(0, 42, 0, 42) 
-menuButton.Position = UDim2.new(0, 20, 0, 120)
-menuButton.BackgroundColor3 = colorSky
-menuButton.Text = "" 
-menuButton.ClipsDescendants = false
-menuButton.ZIndex = 10
-menuButton.Parent = ScreenGui
-
-makeElementDraggable(menuButton)
-
-local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 8)
-btnCorner.Parent = menuButton
-
--- VIỀN PHÁT SÁNG CHUYỂN MÀU TUẦN HOÀN CHO NÚT KÍCH HOẠT (TOGGLE BUTTON)
-local btnStroke = Instance.new("UIStroke")
-btnStroke.Thickness = 2.5
-btnStroke.Color = colorSky
-btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-btnStroke.Parent = menuButton
-
-local starLabel = Instance.new("TextLabel")
-starLabel.Size = UDim2.new(1, 0, 1, 0)
-starLabel.BackgroundTransparency = 1
-starLabel.Text = "★"
-starLabel.TextColor3 = textColorWhite
-starLabel.TextSize = 18
-starLabel.Font = Enum.Font.SourceSansBold
-starLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-starLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-starLabel.ZIndex = 11
-starLabel.Parent = menuButton
-
--- ==========================================
--- HỆ THỐNG PHÁT SÁNG VÀ CHUYỂN MÀU VÒNG LẶP LIÊN TỤC (CHRONO RAINBOW STROKE)
--- ==========================================
--- Định nghĩa danh sách các sắc độ màu sắc phát sáng Blue Sky chạy tuần hoàn liên tục
-local glowColors = {
-	Color3.fromRGB(135, 206, 250), -- Sky Blue sáng nguyên bản
-	Color3.fromRGB(30, 144, 255),  -- Dodger Blue (Màu xanh biển sâu đậm)
-	Color3.fromRGB(0, 191, 255),   -- Deep Sky Blue rực rỡ
-	Color3.fromRGB(0, 255, 255),   -- Cyan/Aqua Neon phát sáng cực mạnh
-	Color3.fromRGB(65, 105, 225)   -- Royal Blue tinh tế
+_0x000d._0x00c0:_0x0042(function()
+if _0x001b._0x001d and _0x0013._0x00be then
+for _0x00ac, _0x00c1 in pairs(_0x0013._0x00be:_0x00c2()) do
+if _0x00c1:_0x00c3(string.char(66, 97, 115, 101, 80, 97, 114, 116)) then _0x00c1._0x00c4 = false end
+end
+end
+end)
+_0x00ae(string.char(77, 97, 105, 110), string.char(78, 111, 99, 108, 105, 112), string.char(78, 111, 99, 108, 105, 112), function(_0x00bd) end)
+_0x00ae(string.char(77, 97, 105, 110), string.char(74, 117, 109, 112, 80, 111, 119, 101, 114), string.char(74, 117, 109, 112, 32, 80, 111, 119, 101, 114), function(_0x00bd)
+local _0x0055 = _0x0013._0x00be
+if _0x0055 and _0x0055:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+local _0x00c5 = _0x0055:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))
+_0x00c5._0x00c6 = true
+_0x00c5._0x001e = _0x00bd and _0x0027._0x0029 or 50
+end
+end)
+_0x0007:_0x0008(string.char(85, 115, 101, 114, 73, 110, 112, 117, 116, 83, 101, 114, 118, 105, 99, 101))._0x00c7:_0x0042(function()
+if _0x001b._0x001f and _0x0013._0x00be then
+local _0x00c5 = _0x0013._0x00be:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))
+if _0x00c5 then _0x00c5:_0x00c8(_0x0045._0x00c9._0x00ca) end
+end
+end)
+_0x00ae(string.char(77, 97, 105, 110), string.char(73, 110, 102, 74, 117, 109, 112), string.char(73, 110, 102, 32, 74, 117, 109, 112), function(_0x00bd) end)
+_0x00ae(string.char(77, 97, 105, 110), string.char(88, 82, 97, 121), string.char(88, 45, 82, 97, 121), function(_0x00bd)
+if _0x00bd then
+for _0x00ac, _0x00c1 in pairs(_0x000f:_0x00c2()) do
+if _0x00c1:_0x00c3(string.char(66, 97, 115, 101, 80, 97, 114, 116)) and not _0x00c1:_0x00cb(_0x0013._0x00be) then
+_0x002c[_0x00c1] = _0x00c1._0x0083
+_0x00c1._0x0083 = 0.6
+end
+end
+else
+for _0x00c1, _0x00cc in pairs(_0x002c) do
+if _0x00c1 and _0x00c1._0x0009 then _0x00c1._0x0083 = _0x00cc end
+end
+table._0x00cd(_0x002c)
+end
+end)
+local function _0x00ce(_0x00cf)
+if _0x00cf == _0x0013 then return end
+local function _0x00d0(_0x0055)
+local _0x00d1 = _0x0055:_0x000b(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116), 5)
+local _0x00c5 = _0x0055:_0x000b(string.char(72, 117, 109, 97, 110, 111, 105, 100), 5)
+if not _0x00d1 or not _0x00c5 then return end
+local _0x0039 = _0x0036(_0x00cf)
+if _0x0039 and not _0x001b._0x0025 then
+local _0x00d2 = _0x00d1:_0x0059(string.char(69, 83, 80, 72, 105, 103, 104, 108, 105, 103, 104, 116))
+if _0x00d2 then _0x00d2:_0x0077() end
+_0x0074(_0x0055)
+if _0x002d[_0x00cf] then
+_0x00d1._0x005a = _0x002d[_0x00cf]._0x005a
+_0x00d1._0x0083 = _0x002d[_0x00cf]._0x00d3
+_0x00d1._0x00c4 = _0x002d[_0x00cf]._0x00d4
+_0x00d1._0x0068 = _0x002d[_0x00cf]._0x0068
+_0x002d[_0x00cf] = nil
+end
+return
+end
+local _0x00d5
+_0x00d5 = _0x00c5._0x00d6:_0x0042(function()
+if _0x0055._0x0009 and _0x00d1:_0x0059(string.char(69, 83, 80, 72, 105, 103, 104, 108, 105, 103, 104, 116)) then
+_0x0054(_0x0055, _0x00cf, _0x001b._0x0025 and _0x0039)
+else
+_0x00d5:_0x00d7()
+end
+end)
+local _0x00d8 = _0x0032(_0x00cf)
+local _0x00d9 = _0x001b._0x0026 and _0x0039
+local _0x00da = _0x0039 and _0x0018 or _0x0017
+local _0x00db = (_0x001b._0x0021 or (_0x001b._0x0022 and _0x00d8) or (_0x001b._0x0025 and _0x0039)) and not _0x00d9
+if _0x00db then
+local _0x00d2 = _0x00d1:_0x0059(string.char(69, 83, 80, 72, 105, 103, 104, 108, 105, 103, 104, 116)) or _0x0001._0x0002(string.char(72, 105, 103, 104, 108, 105, 103, 104, 116))
+_0x00d2._0x0003 = string.char(69, 83, 80, 72, 105, 103, 104, 108, 105, 103, 104, 116)
+_0x00d2._0x005b = _0x0055
+_0x00d2._0x0009 = _0x00d1
+_0x00d2._0x00dc = 1
+_0x00d2._0x00dd = 0
+_0x00d2._0x00de = _0x00da
+_0x0054(_0x0055, _0x00cf, _0x001b._0x0025 and _0x0039)
+else
+local _0x00d2 = _0x00d1:_0x0059(string.char(69, 83, 80, 72, 105, 103, 104, 108, 105, 103, 104, 116))
+if _0x00d2 then _0x00d2:_0x0077() end
+_0x0074(_0x0055)
+end
+local _0x00df = (_0x001b._0x0023 or (_0x001b._0x0024 and _0x00d8) or (_0x001b._0x0025 and _0x0039)) and not _0x00d9
+if _0x00df then
+if not _0x002d[_0x00cf] then
+_0x002d[_0x00cf] = {_0x005a = _0x00d1._0x005a, _0x00d3 = _0x00d1._0x0083, _0x00d4 = _0x00d1._0x00c4, _0x0068 = _0x00d1._0x0068}
+end
+_0x00d1._0x005a = _0x005e._0x0002(_0x0027._0x002a, _0x0027._0x002a, _0x0027._0x002a)
+_0x00d1._0x00c4 = false
+_0x00d1._0x0083 = _0x0027._0x002b
+_0x00d1._0x0068 = _0x00da
+else
+if _0x002d[_0x00cf] then
+_0x00d1._0x005a = _0x002d[_0x00cf]._0x005a
+_0x00d1._0x0083 = _0x002d[_0x00cf]._0x00d3
+_0x00d1._0x00c4 = _0x002d[_0x00cf]._0x00d4
+_0x00d1._0x0068 = _0x002d[_0x00cf]._0x0068
+_0x002d[_0x00cf] = nil
+end
+end
+end
+if _0x00cf._0x00be then _0x00e0._0x00e1(_0x00d0, _0x00cf._0x00be) end
+_0x00cf._0x00e2:_0x0042(_0x00d0)
+end
+local function _0x00e3()
+for _0x00ac, _0x00e4 in pairs(_0x000e:_0x00e5()) do
+if _0x00e4._0x00be then _0x00ce(_0x00e4) end
+end
+end
+_0x000e._0x00e6:_0x0042(function(_0x00e7)
+_0x00ce(_0x00e7)
+end)
+_0x000e._0x00e8:_0x0042(function(_0x00e9)
+_0x002d[_0x00e9] = nil
+_0x002e[_0x00e9._0x0037] = nil
+end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(65, 110, 116, 105, 70, 114, 105, 101, 110, 100), string.char(78, 233, 32, 66, 7841, 110, 32, 55357, 57057, 65039), function() _0x00e3() end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(67, 104, 101, 99, 107, 70, 114, 105, 101, 110, 100, 115), string.char(84, 97, 103, 32, 66, 7841, 110, 32, 98, 232, 32, 55357, 56421), function() _0x00e3() end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(69, 83, 80, 65, 108, 108), string.char(69, 83, 80, 32, 66, 111, 120), function() _0x00e3() end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(69, 83, 80, 84, 101, 97, 109), string.char(69, 83, 80, 32, 84, 101, 97, 109), function() _0x00e3() end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(72, 105, 116, 98, 111, 120, 65, 108, 108), string.char(72, 105, 116, 98, 111, 120, 32, 65, 108, 108), function() _0x00e3() end)
+_0x00ae(string.char(69, 83, 80, 72, 105, 116, 98, 111, 120), string.char(72, 105, 116, 98, 111, 120, 84, 101, 97, 109), string.char(72, 105, 116, 98, 111, 120, 32, 272, 7897, 105), function() _0x00e3() end)
+_0x00e0._0x00e1(function()
+while true do
+_0x00e3()
+_0x00e0._0x00ea(1.0)
+end
+end)
+_0x00b9(string.char(70, 108, 121, 71, 117, 105), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 102, 108, 121, 118, 117, 107, 107, 104, 117, 98))
+_0x00b9(string.char(66, 117, 105, 108, 100, 83, 116, 101, 97, 108), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 98, 117, 105, 108, 100, 97, 110, 100, 115, 116, 101, 97, 108))
+_0x00b9(string.char(65, 105, 109, 86, 117, 72, 117, 98), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 97, 105, 109, 98, 111, 116, 118, 117, 107, 107, 104, 117, 98))
+_0x00b9(string.char(84, 112, 86, 117, 72, 117, 98), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 116, 112, 118, 117, 107, 107, 104, 117, 98))
+_0x00b9(string.char(70, 108, 111, 97, 116, 86, 117), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 102, 108, 111, 97, 116, 118, 117, 104, 117, 98))
+_0x00b9(string.char(65, 100, 109, 105, 110, 72, 117, 98), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 97, 100, 109, 105, 110, 104, 117, 98))
+_0x00b9(string.char(65, 102, 107, 86, 117, 72, 117, 98), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 97, 102, 107, 118, 117, 104, 117, 98))
+_0x00b9(string.char(77, 97, 83, 99, 114, 105, 112, 116), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 109, 97))
+_0x00b9(string.char(66, 108, 111, 120, 70, 114, 117, 105, 116), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 86, 84, 68, 82, 79, 66, 76, 79, 88, 47, 65, 110, 105, 109, 101, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 84, 97, 121, 104, 117, 98, 46, 116, 120, 116))
+_0x00b9(string.char(66, 101, 110, 104, 86, 105, 101, 110), string.char(104, 116, 116, 112, 115, 58, 47, 47, 97, 105, 114, 102, 108, 111, 119, 115, 99, 114, 105, 112, 116, 46, 99, 111, 109, 47, 108, 111, 97, 100, 101, 114))
+_0x00b9(string.char(111, 110, 32, 114, 97, 102, 116), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 103, 117, 109, 97, 110, 98, 97, 47, 83, 99, 114, 105, 112, 116, 115, 47, 109, 97, 105, 110, 47, 83, 117, 114, 118, 105, 118, 101, 111, 110, 97, 82, 97, 102, 116))
+_0x00b9(string.char(111, 110, 32, 114, 97, 102, 116), string.char(104, 116, 116, 112, 115, 58, 47, 47, 114, 97, 119, 46, 103, 105, 116, 104, 117, 98, 117, 115, 101, 114, 99, 111, 110, 116, 101, 110, 116, 46, 99, 111, 109, 47, 118, 117, 107, 107, 50, 107, 49, 50, 45, 104, 117, 98, 47, 103, 97, 109, 101, 118, 117, 107, 107, 104, 117, 98, 47, 114, 101, 102, 115, 47, 104, 101, 97, 100, 115, 47, 109, 97, 105, 110, 47, 102, 108, 105, 110, 103))
+local _0x00eb = _0x0094[string.char(72, 97, 99, 107, 101, 114)]._0x00a2
+local _0x00ec = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x00ec._0x005a = _0x004f._0x0002(0.94, 0, 0, 110)
+_0x00ec._0x007b = _0x0015._0x0016(0, 0, 0)
+_0x00ec._0x0060 = 0.5
+_0x00ec._0x0009 = _0x00eb
+local _0x00ed = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x00ed._0x0080 = _0x0081._0x0002(0, 6)
+_0x00ed._0x0009 = _0x00ec
+local _0x00ee = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x00ee._0x005a = _0x004f._0x0002(1, 0, 0, 22)
+_0x00ee._0x0060 = 1
+_0x00ee._0x0072 = string.char(55357, 57057, 65039, 32, 65, 78, 84, 73, 45, 67, 72, 69, 65, 84, 32, 68, 69, 84, 69, 67, 84, 73, 79, 78)
+_0x00ee._0x0061 = _0x001a
+_0x00ee._0x0062 = 11
+_0x00ee._0x0063 = _0x0045._0x0063._0x0087
+_0x00ee._0x0009 = _0x00ec
+local function _0x00ef(_0x0098, _0x00f0, _0x00f1)
+local _0x00f2 = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x00f2._0x005a = _0x004f._0x0002(0.9, 0, 0, 16)
+_0x00f2._0x0048 = _0x004f._0x0002(0.05, 0, 0, _0x00f0)
+_0x00f2._0x0060 = 1
+_0x00f2._0x0072 = _0x0098
+_0x00f2._0x0061 = _0x001a
+_0x00f2._0x0062 = 10
+_0x00f2._0x0063 = _0x0045._0x0063._0x0064
+_0x00f2._0x00f3 = _0x0045._0x00f3._0x00f4
+_0x00f2._0x0009 = _0x00f1
+return _0x00f2
+end
+local _0x00f5 = _0x00ef(string.char(8226, 32, 65, 110, 116, 105, 45, 67, 104, 101, 97, 116, 32, 77, 97, 105, 110, 58, 32, 83, 67, 65, 78, 78, 73, 78, 71, 46, 46, 46), 22, _0x00ec)
+local _0x00f6 = _0x00ef(string.char(8226, 32, 65, 110, 116, 105, 32, 68, 101, 115, 121, 110, 99, 58, 32, 83, 67, 65, 78, 78, 73, 78, 71, 46, 46, 46), 42, _0x00ec)
+local _0x00f7 = _0x00ef(string.char(8226, 32, 65, 110, 116, 105, 32, 84, 101, 108, 101, 112, 111, 114, 116, 58, 32, 83, 67, 65, 78, 78, 73, 78, 71, 46, 46, 46), 62, _0x00ec)
+local _0x00f8 = _0x00ef(string.char(8226, 32, 65, 110, 116, 105, 32, 78, 111, 99, 108, 105, 112, 58, 32, 83, 67, 65, 78, 78, 73, 78, 71, 46, 46, 46), 82, _0x00ec)
+_0x00e0._0x00e1(function()
+while true do
+if _0x0095 == string.char(72, 97, 99, 107, 101, 114) then
+local _0x00f9, _0x00fa, _0x00fb, _0x00fc = string.char(67, 108, 101, 97, 114), string.char(67, 108, 101, 97, 114), string.char(67, 108, 101, 97, 114), string.char(67, 108, 101, 97, 114)
+for _0x00ac, _0x00fd in pairs(_0x0007:_0x00c2()) do
+if _0x00fd:_0x00c3(string.char(83, 99, 114, 105, 112, 116)) or _0x00fd:_0x00c3(string.char(76, 111, 99, 97, 108, 83, 99, 114, 105, 112, 116)) then
+local _0x00fe = string.lower(_0x00fd._0x0003)
+if string.find(_0x00fe, string.char(97, 110, 116, 105)) or string.find(_0x00fe, string.char(99, 104, 101, 97, 116)) or string.find(_0x00fe, string.char(118, 97, 110, 103, 117, 97, 114, 100)) or string.find(_0x00fe, string.char(97, 100, 111, 110, 105, 115)) or string.find(_0x00fe, string.char(97, 99)) then
+_0x00f9 = string.char(68, 69, 84, 69, 67, 84, 69, 68, 33)
+end
+if string.find(_0x00fe, string.char(100, 101, 115, 121, 110, 99)) or string.find(_0x00fe, string.char(118, 101, 108, 111, 99, 105, 116, 121)) or string.find(_0x00fe, string.char(97, 110, 103, 108, 101)) then
+_0x00fa = string.char(68, 69, 84, 69, 67, 84, 69, 68, 33)
+end
+if string.find(_0x00fe, string.char(116, 101, 108, 101, 112, 111, 114, 116)) or string.find(_0x00fe, string.char(116, 112)) or string.find(_0x00fe, string.char(112, 111, 115)) then
+_0x00fb = string.char(68, 69, 84, 69, 67, 84, 69, 68, 33)
+end
+if string.find(_0x00fe, string.char(110, 111, 99, 108, 105, 112)) or string.find(_0x00fe, string.char(99, 108, 105, 112)) or string.find(_0x00fe, string.char(104, 105, 116)) then
+_0x00fc = string.char(68, 69, 84, 69, 67, 84, 69, 68, 33)
+end
+end
+end
+_0x00f5._0x0072 = string.char(8226, 32, 65, 110, 116, 105, 45, 67, 104, 101, 97, 116, 32, 77, 97, 105, 110, 58, 32) .. _0x00f9
+_0x00f6._0x0072 = string.char(8226, 32, 65, 110, 116, 105, 32, 68, 101, 115, 121, 110, 99, 58, 32) .. _0x00fa
+_0x00f7._0x0072 = string.char(8226, 32, 65, 110, 116, 105, 32, 84, 101, 108, 101, 112, 111, 114, 116, 58, 32) .. _0x00fb
+_0x00f8._0x0072 = string.char(8226, 32, 65, 110, 116, 105, 32, 78, 111, 99, 108, 105, 112, 58, 32) .. _0x00fc
+end
+_0x00e0._0x00ea(2.5)
+end
+end)
+local _0x00ff = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x00ff._0x005a = _0x004f._0x0002(0.94, 0, 0, 150)
+_0x00ff._0x007b = _0x0015._0x0016(15, 15, 20)
+_0x00ff._0x0060 = 0.3
+_0x00ff._0x0009 = _0x00eb
+local _0x0100 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x0100._0x0080 = _0x0081._0x0002(0, 6)
+_0x0100._0x0009 = _0x00ff
+local _0x0101 = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x0101._0x005a = _0x004f._0x0002(1, 0, 0, 20)
+_0x0101._0x0060 = 1
+_0x0101._0x0072 = string.char(55357, 56545, 32, 67, 76, 73, 69, 78, 84, 32, 84, 79, 32, 83, 69, 82, 86, 69, 82, 32, 82, 69, 77, 79, 84, 69, 32, 77, 79, 78, 73, 84, 79, 82)
+_0x0101._0x0061 = _0x0017
+_0x0101._0x0062 = 10
+_0x0101._0x0063 = _0x0045._0x0063._0x0087
+_0x0101._0x0009 = _0x00ff
+local _0x0102 = _0x0001._0x0002(string.char(83, 99, 114, 111, 108, 108, 105, 110, 103, 70, 114, 97, 109, 101))
+_0x0102._0x005a = _0x004f._0x0002(0.94, 0, 0, 95)
+_0x0102._0x0048 = _0x004f._0x0002(0.03, 0, 0, 22)
+_0x0102._0x007b = _0x0015._0x0016(0, 0, 0)
+_0x0102._0x0060 = 0.6
+_0x0102._0x009d = _0x004f._0x0002(0, 0, 0, 0)
+_0x0102._0x009e = 4
+_0x0102._0x0009 = _0x00ff
+local _0x0103 = _0x0001._0x0002(string.char(85, 73, 76, 105, 115, 116, 76, 97, 121, 111, 117, 116))
+_0x0103._0x008e = _0x0081._0x0002(0, 3)
+_0x0103._0x0009 = _0x0102
+local function _0x0104()
+_0x0102._0x009d = _0x004f._0x0002(0, 0, 0, _0x0103._0x00a9._0x0053 + 10)
+end
+_0x0103:_0x00a8(string.char(65, 98, 115, 111, 108, 117, 116, 101, 67, 111, 110, 116, 101, 110, 116, 83, 105, 122, 101)):_0x0042(_0x0104)
+local _0x0105 = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x0105._0x005a = _0x004f._0x0002(0.94, 0, 0, 25)
+_0x0105._0x0048 = _0x004f._0x0002(0.03, 0, 0, 120)
+_0x0105._0x0060 = 1
+_0x0105._0x0009 = _0x00ff
+local _0x0106 = _0x0001._0x0002(string.char(85, 73, 76, 105, 115, 116, 76, 97, 121, 111, 117, 116))
+_0x0106._0x0107 = _0x0045._0x0107._0x0108
+_0x0106._0x008f = _0x0045._0x008f._0x0090
+_0x0106._0x008e = _0x0081._0x0002(0, 8)
+_0x0106._0x0009 = _0x0105
+local function _0x0109(_0x0098, _0x010a)
+local _0x010b = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+_0x010b._0x005a = _0x004f._0x0002(0, 70, 0, 20)
+_0x010b._0x007b = _0x010a
+_0x010b._0x0072 = _0x0098
+_0x010b._0x0063 = _0x0045._0x0063._0x0064
+_0x010b._0x0061 = _0x001a
+_0x010b._0x0062 = 10
+_0x010b._0x0009 = _0x0105
+local _0x010c = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x010c._0x0080 = _0x0081._0x0002(0, 4)
+_0x010c._0x0009 = _0x010b
+return _0x010b
+end
+local _0x010d = _0x0109(string.char(67, 79, 80, 89, 32, 65, 76, 76), _0x0015._0x0016(50, 120, 200))
+local _0x010e = _0x0109(string.char(80, 65, 85, 83, 69), _0x0015._0x0016(200, 60, 60))
+local _0x010f = _0x0109(string.char(82, 69, 83, 85, 77, 69), _0x0015._0x0016(60, 150, 60))
+local function _0x0110(_0x0098)
+if _0x002f then return end
+if #_0x0030 >= _0x0031 then
+table.remove(_0x0030, 1)
+local _0x0111 = _0x0102:_0x0112()[2]
+if _0x0111 and _0x0111:_0x00c3(string.char(84, 101, 120, 116, 66, 111, 120)) then _0x0111:_0x0077() end
+end
+table.insert(_0x0030, _0x0098)
+local _0x0113 = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 111, 120))
+_0x0113._0x005a = _0x004f._0x0002(1, -6, 0, 16)
+_0x0113._0x0060 = 1
+_0x0113._0x0072 = _0x0098
+_0x0113._0x0114 = false
+_0x0113._0x0115 = false
+_0x0113._0x0061 = _0x0017
+_0x0113._0x0063 = _0x0045._0x0063._0x0116
+_0x0113._0x0062 = 9
+_0x0113._0x00f3 = _0x0045._0x00f3._0x00f4
+_0x0113._0x0009 = _0x0102
+end
+local _0x0117 = _0x0118(_0x0007)
+if _0x0117 and _0x0119 then
+_0x011a(_0x0117, false)
+local _0x011b = _0x0117._0x011c
+_0x0117._0x011c = _0x011d(function(_0x011e, ...)
+local _0x011f = _0x0120()
+if (_0x011f == string.char(70, 105, 114, 101, 83, 101, 114, 118, 101, 114) or _0x011f == string.char(73, 110, 118, 111, 107, 101, 83, 101, 114, 118, 101, 114)) and not _0x002f then
+_0x00e0._0x00e1(function()
+_0x0110(string.char(91) .. _0x011f .. string.char(93, 32, 45, 62, 32) .. _0x011e._0x0003)
+end)
+end
+return _0x011b(_0x011e, ...)
+end)
+_0x011a(_0x0117, true)
+else
+_0x0012._0x0121:_0x0042(function(_0x0122)
+if string.find(string.lower(_0x0122), string.char(114, 101, 109, 111, 116, 101)) or string.find(string.lower(_0x0122), string.char(102, 105, 114, 101)) then
+_0x0110(string.char(91, 69, 118, 101, 110, 116, 93, 58, 32) .. _0x0122)
+end
+end)
+end
+_0x010d._0x00ab:_0x0042(function()
+local _0x0123 = table.concat(_0x0030, string.char(10))
+if _0x0124 then
+_0x0124(_0x0123)
+_0x010d._0x0072 = string.char(67, 79, 80, 73, 69, 68, 33)
+_0x00e0._0x00ea(1)
+_0x010d._0x0072 = string.char(67, 79, 80, 89, 32, 65, 76, 76)
+end
+end)
+_0x010e._0x00ab:_0x0042(function()
+_0x002f = true
+_0x0110(string.char(91, 83, 89, 83, 84, 69, 77, 93, 58, 32, 77, 79, 78, 73, 84, 79, 82, 32, 80, 65, 85, 83, 69, 68, 46))
+end)
+_0x010f._0x00ab:_0x0042(function()
+_0x002f = false
+_0x0110(string.char(91, 83, 89, 83, 84, 69, 77, 93, 58, 32, 77, 79, 78, 73, 84, 79, 82, 32, 82, 69, 83, 85, 77, 69, 68, 46))
+end)
+local _0x0125 = _0x0094[string.char(83, 101, 116, 116, 105, 110, 103)]._0x00a2
+local _0x0126 = _0x0001._0x0002(string.char(70, 114, 97, 109, 101))
+_0x0126._0x005a = _0x004f._0x0002(0.94, 0, 0, 180)
+_0x0126._0x007b = _0x0015._0x0016(0, 0, 0)
+_0x0126._0x0060 = 0.5
+_0x0126._0x0009 = _0x0125
+local _0x0127 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x0127._0x0080 = _0x0081._0x0002(0, 6)
+_0x0127._0x0009 = _0x0126
+local _0x0128 = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x0128._0x005a = _0x004f._0x0002(1, 0, 0, 25)
+_0x0128._0x0060 = 1
+_0x0128._0x0072 = string.char(9881, 65039, 32, 67, 79, 78, 70, 73, 71, 85, 82, 65, 84, 73, 79, 78)
+_0x0128._0x0061 = _0x001a
+_0x0128._0x0062 = 11
+_0x0128._0x0063 = _0x0045._0x0063._0x0087
+_0x0128._0x0009 = _0x0126
+local function _0x0129(_0x012a, _0x012b, _0x012c, _0x00f0, _0x00b1)
+local _0x005f = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x005f._0x005a = _0x004f._0x0002(0.55, 0, 0, 22)
+_0x005f._0x0048 = _0x004f._0x0002(0.05, 0, 0, _0x00f0)
+_0x005f._0x0060 = 1
+_0x005f._0x0072 = _0x012a
+_0x005f._0x0061 = _0x001a
+_0x005f._0x0062 = 10
+_0x005f._0x0063 = _0x0045._0x0063._0x0064
+_0x005f._0x00f3 = _0x0045._0x00f3._0x00f4
+_0x005f._0x0009 = _0x0126
+local _0x012d = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 111, 120))
+_0x012d._0x005a = _0x004f._0x0002(0.3, 0, 0, 18)
+_0x012d._0x0048 = _0x004f._0x0002(0.65, 0, 0, _0x00f0 + 1)
+_0x012d._0x007b = _0x0015._0x0016(255, 255, 255)
+_0x012d._0x0060 = 0.8
+_0x012d._0x0072 = tostring(_0x012c)
+_0x012d._0x012e = _0x012b
+_0x012d._0x0061 = _0x001a
+_0x012d._0x0063 = _0x0045._0x0063._0x0116
+_0x012d._0x0062 = 10
+_0x012d._0x0009 = _0x0126
+local _0x012f = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x012f._0x0080 = _0x0081._0x0002(0, 4)
+_0x012f._0x0009 = _0x012d
+_0x012d._0x0130:_0x0042(function()
+local _0x0131 = tonumber(_0x012d._0x0072)
+if _0x0131 then _0x00b1(_0x0131) else _0x012d._0x0072 = tostring(_0x012c) end
+end)
+end
+_0x0129(string.char(49, 46, 32, 87, 97, 108, 107, 83, 112, 101, 101, 100, 58), string.char(83, 112, 101, 101, 100, 46, 46, 46), _0x0027._0x0028, 35, function(_0x0132)
+_0x0027._0x0028 = _0x0132
+if _0x001b._0x001c and _0x0013._0x00be and _0x0013._0x00be:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+_0x0013._0x00be:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))._0x00bf = _0x0132
+end
+end)
+_0x0129(string.char(50, 46, 32, 74, 117, 109, 112, 80, 111, 119, 101, 114, 58), string.char(74, 117, 109, 112, 46, 46, 46), _0x0027._0x0029, 70, function(_0x0132)
+_0x0027._0x0029 = _0x0132
+if _0x001b._0x001e and _0x0013._0x00be and _0x0013._0x00be:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+_0x0013._0x00be:_0x006a(string.char(72, 117, 109, 97, 110, 111, 105, 100))._0x001e = _0x0132
+end
+end)
+_0x0129(string.char(51, 46, 32, 83, 105, 122, 101, 32, 72, 105, 116, 98, 111, 120, 58), string.char(83, 105, 122, 101, 46, 46, 46), _0x0027._0x002a, 105, function(_0x0132)
+_0x0027._0x002a = _0x0132 _0x00e3()
+end)
+_0x0129(string.char(52, 46, 32, 84, 114, 97, 110, 115, 32, 72, 105, 116, 98, 111, 120, 32, 40, 48, 45, 49, 41, 58), string.char(84, 114, 97, 110, 115, 46, 46, 46), _0x0027._0x002b, 140, function(_0x0132)
+_0x0027._0x002b = (_0x0132 >= 0 and _0x0132 <= 1) and _0x0132 or 0.7 _0x00e3()
+end)
+local _0x0133 = _0x0001._0x0002(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+_0x0133._0x0003 = string.char(66, 108, 117, 101, 83, 107, 121, 84, 111, 103, 103, 108, 101, 66, 116, 110)
+_0x0133._0x005a = _0x004f._0x0002(0, 42, 0, 42)
+_0x0133._0x0048 = _0x004f._0x0002(0, 20, 0, 120)
+_0x0133._0x007b = _0x0017
+_0x0133._0x0072 = ""
+_0x0133._0x007d = false
+_0x0133._0x0088 = 10
+_0x0133._0x0009 = _0x0000
+_0x003b(_0x0133)
+local _0x0134 = _0x0001._0x0002(string.char(85, 73, 67, 111, 114, 110, 101, 114))
+_0x0134._0x0080 = _0x0081._0x0002(0, 8)
+_0x0134._0x0009 = _0x0133
+local _0x0135 = _0x0001._0x0002(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+_0x0135._0x0067 = 2.5
+_0x0135._0x0068 = _0x0017
+_0x0135._0x0084 = _0x0045._0x0084._0x0085
+_0x0135._0x0009 = _0x0133
+local _0x0136 = _0x0001._0x0002(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+_0x0136._0x005a = _0x004f._0x0002(1, 0, 1, 0)
+_0x0136._0x0060 = 1
+_0x0136._0x0072 = string.char(9733)
+_0x0136._0x0061 = _0x001a
+_0x0136._0x0062 = 18
+_0x0136._0x0063 = _0x0045._0x0063._0x0064
+_0x0136._0x0079 = _0x007a._0x0002(0.5, 0.5)
+_0x0136._0x0048 = _0x004f._0x0002(0.5, 0, 0.5, 0)
+_0x0136._0x0088 = 11
+_0x0136._0x0009 = _0x0133
+local _0x0137 = {
+_0x0015._0x0016(135, 206, 250),
+_0x0015._0x0016(30, 144, 255),
+_0x0015._0x0016(0, 191, 255),
+_0x0015._0x0016(0, 255, 255),
+_0x0015._0x0016(65, 105, 225)
 }
-
-task.spawn(function()
-	local colorIndex = 1
-	while true do
-		local nextColor = glowColors[colorIndex]
-		
-		-- Tạo Tween chuyển màu mượt mà đồng bộ cho cả viền menu chính và viền nút bấm trong 1 giây
-		local tweenInfo = TweenInfo.new(1.0, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-		local tweenMenu = TweenService:Create(menuStroke, tweenInfo, {Color = nextColor})
-		local tweenButton = TweenService:Create(btnStroke, tweenInfo, {Color = nextColor})
-		
-		tweenMenu:Play()
-		tweenButton:Play()
-		
-		-- Đợi tween hoàn tất rồi nhảy sang mã màu tiếp theo trong danh sách tuần hoàn
-		tweenMenu.Completed:Wait()
-		colorIndex = (colorIndex % #glowColors) + 1
-	end
+_0x00e0._0x00e1(function()
+local _0x0138 = 1
+while true do
+local _0x0139 = _0x0137[_0x0138]
+local _0x013a = _0x00b7._0x0002(1.0, _0x0045._0x013b._0x013c, _0x0045._0x013d._0x013e)
+local _0x013f = _0x000c:_0x00b6(_0x0082, _0x013a, {_0x0068 = _0x0139})
+local _0x0140 = _0x000c:_0x00b6(_0x0135, _0x013a, {_0x0068 = _0x0139})
+_0x013f:_0x00b8()
+_0x0140:_0x00b8()
+_0x013f._0x0141:_0x0142()
+_0x0138 = (_0x0138 % #_0x0137) + 1
+end
 end)
-
--- --- LOGIC XOAY NGÔI SAO ---
-local isMenuOpen = false
-local starRotationAngle = 0
-
-RunService.RenderStepped:Connect(function(deltaTime)
-	if isMenuOpen then
-		starRotationAngle = (starRotationAngle + (120 * deltaTime)) % 360 
-		starLabel.Rotation = starRotationAngle
-	end
+local _0x0143 = false
+local _0x0144 = 0
+_0x000d._0x0145:_0x0042(function(_0x0146)
+if _0x0143 then
+_0x0144 = (_0x0144 + (120 * _0x0146)) % 360
+_0x0136._0x0147 = _0x0144
+end
 end)
-
-menuButton.MouseButton1Click:Connect(function()
-	isMenuOpen = not isMenuOpen
-	if isMenuOpen then
-		mainMenu.Size = UDim2.new(0, 0, 0, 0)
-		mainMenu.Visible = true
-		TweenService:Create(mainMenu, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 400, 0, 320)}):Play()
-	else
-		starLabel.Rotation = 0
-		starRotationAngle = 0
-		local menuTween = TweenService:Create(mainMenu, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
-		menuTween:Play()
-		menuTween.Completed:Connect(function() if not isMenuOpen then mainMenu.Visible = false end end)
-	end
+_0x0133._0x00ab:_0x0042(function()
+_0x0143 = not _0x0143
+if _0x0143 then
+_0x0078._0x005a = _0x004f._0x0002(0, 0, 0, 0)
+_0x0078._0x007e = true
+_0x000c:_0x00b6(_0x0078, _0x00b7._0x0002(0.3, _0x0045._0x013b._0x0148, _0x0045._0x013d._0x0149), {_0x005a = _0x004f._0x0002(0, 400, 0, 320)}):_0x00b8()
+else
+_0x0136._0x0147 = 0
+_0x0144 = 0
+local _0x014a = _0x000c:_0x00b6(_0x0078, _0x00b7._0x0002(0.2, _0x0045._0x013b._0x014b, _0x0045._0x013d._0x014c), {_0x005a = _0x004f._0x0002(0, 0, 0, 0)})
+_0x014a:_0x00b8()
+_0x014a._0x0141:_0x0042(function() if not _0x0143 then _0x0078._0x007e = false end end)
+end
 end)
-
-task.spawn(triggerESPRefresh)
+_0x00e0._0x00e1(_0x00e3)
