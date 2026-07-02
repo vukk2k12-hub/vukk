@@ -533,6 +533,8 @@ addScriptButton("MaScript", "https://raw.githubusercontent.com/vukk2k12-hub/game
 addScriptButton("BloxFruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
 addScriptButton("BenhVien", "https://airflowscript.com/loader")
 addScriptButton("on raft", "https://raw.githubusercontent.com/gumanba/Scripts/main/SurviveonaRaft")
+addScriptButton("on raft", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/fling")
+
 -- ==========================================
 -- TAB 4 (HACKER PANEL & SNIFFER MONITOR)
 -- ==========================================
