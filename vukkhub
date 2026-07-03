@@ -1,5 +1,6 @@
 -- ====================================================================
--- by vuhub===================================================================
+-- by vuhub (Optimized Tab 1 Continuous Update) ========================
+-- ====================================================================
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BlueSkyCoreGui_FXUpdate"
@@ -25,7 +26,7 @@ local localPlayer = Players.LocalPlayer
 local colorBlue = Color3.fromRGB(0, 0, 255)         
 local colorSky = Color3.fromRGB(135, 206, 250)      
 local colorGreen = Color3.fromRGB(0, 255, 0)        
-local menuBgColor = colorSky                        
+local menuBgColor = colorSky                         
 local textColorWhite = Color3.fromRGB(255, 255, 255)
 
 local states = {
@@ -361,41 +362,17 @@ local function addScriptButton(displayName, url)
 end
 
 -- ==========================================
--- LOGIC TÍNH NĂNG ESP & HITBOX
+-- LOGIC TÍNH NĂNG TAB 1 (CHÍNH - MAIN)
+-- CẬP NHẬT LIÊN TỤC KHÔNG LAG
 -- ==========================================
-createCheatButton("Main", "Speed", "Speed Hack", function(active)
-	local character = localPlayer.Character
-	if character and character:FindFirstChildOfClass("Humanoid") then 
-		character:FindFirstChildOfClass("Humanoid").WalkSpeed = active and settingsConfig.SpeedValue or 16 
-	end
-end)
 
-RunService.Stepped:Connect(function()
-	if states.Noclip and localPlayer.Character then
-		for _, part in pairs(localPlayer.Character:GetDescendants()) do
-			if part:IsA("BasePart") then part.CanCollide = false end
-		end
-	end
-end)
+-- Tạo Nút
+createCheatButton("Main", "Speed", "Speed Hack", function(active) end)
 createCheatButton("Main", "Noclip", "Noclip", function(active) end)
-
-createCheatButton("Main", "JumpPower", "Jump Power", function(active)
-	local character = localPlayer.Character
-	if character and character:FindFirstChildOfClass("Humanoid") then
-		local hum = character:FindFirstChildOfClass("Humanoid")
-		hum.UseJumpPower = true
-		hum.JumpPower = active and settingsConfig.JumpValue or 50
-	end
-end)
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-	if states.InfJump and localPlayer.Character then
-		local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-	end
-end)
+createCheatButton("Main", "JumpPower", "Jump Power", function(active) end)
 createCheatButton("Main", "InfJump", "Inf Jump", function(active) end)
 
+-- Giữ nguyên cơ chế X-Ray kích hoạt một lần để không quét Workspace gây lag
 createCheatButton("Main", "XRay", "X-Ray", function(active)
 	if active then
 		for _, part in pairs(Workspace:GetDescendants()) do
@@ -412,6 +389,70 @@ createCheatButton("Main", "XRay", "X-Ray", function(active)
 	end
 end)
 
+-- Vòng lặp tối ưu hóa cập nhật liên tục các trạng thái của Nhân vật (Speed, Noclip, JumpPower)
+RunService.Stepped:Connect(function()
+	local character = localPlayer.Character
+	if character then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		
+		-- Cập nhật liên tục WalkSpeed khi nhân vật hồi sinh hoặc bị đổi tốc độ gốc
+		if humanoid then
+			if states.Speed then
+				if humanoid.WalkSpeed ~= settingsConfig.SpeedValue then
+					humanoid.WalkSpeed = settingsConfig.SpeedValue
+				end
+			end
+			
+			-- Cập nhật liên tục JumpPower
+			if states.JumpPower then
+				if not humanoid.UseJumpPower then humanoid.UseJumpPower = true end
+				if humanoid.JumpPower ~= settingsConfig.JumpValue then
+					humanoid.JumpPower = settingsConfig.JumpValue
+				end
+			end
+		end
+		
+		-- Cập nhật liên tục Noclip mượt mà
+		if states.Noclip then
+			for _, part in pairs(character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide then 
+					part.CanCollide = false 
+				end
+			end
+		end
+	end
+end)
+
+-- Lắng nghe sự kiện để kích hoạt liên tục nhảy (Infinite Jump)
+UserInputService.JumpRequest:Connect(function()
+	if states.InfJump and localPlayer.Character then
+		local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then 
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
+		end
+	end
+end)
+
+-- Khôi phục giá trị mặc định khi tắt Hack (nhằm đảm bảo tính chính xác)
+task.spawn(function()
+	while true do
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			if not states.Speed and humanoid.WalkSpeed == settingsConfig.SpeedValue then
+				humanoid.WalkSpeed = 16
+			end
+			if not states.JumpPower and humanoid.JumpPower == settingsConfig.JumpValue then
+				humanoid.JumpPower = 50
+			end
+		end
+		task.wait(0.5)
+	end
+end)
+
+-- ==========================================
+-- LOGIC TÍNH NĂNG ESP & HITBOX
+-- ==========================================
 local function updateESPAndHitboxForPlayer(player)
 	if player == localPlayer then return end
 	
@@ -536,6 +577,7 @@ addScriptButton("on raft", "https://raw.githubusercontent.com/gumanba/Scripts/ma
 addScriptButton("fling", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/fling")
 addScriptButton("evulusoin", "https://raw.githubusercontent.com/gumanba/Scripts/main/BrainrotEvolution")
 addScriptButton("99 night", "https://raw.githubusercontent.com/caomod2077/Script/refs/heads/main/FoxnameHub.lua")
+
 -- ==========================================
 -- TAB 4 (HACKER PANEL & SNIFFER MONITOR)
 -- ==========================================
@@ -798,15 +840,9 @@ end
 
 createSettingInputRow("1. WalkSpeed:", "Speed...", settingsConfig.SpeedValue, 35, function(val)
 	settingsConfig.SpeedValue = val
-	if states.Speed and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-		localPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
-	end
 end)
 createSettingInputRow("2. JumpPower:", "Jump...", settingsConfig.JumpValue, 70, function(val)
 	settingsConfig.JumpValue = val
-	if states.JumpPower and localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid") then
-		localPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = val
-	end
 end)
 createSettingInputRow("3. Size Hitbox:", "Size...", settingsConfig.HitboxSizeValue, 105, function(val)
 	settingsConfig.HitboxSizeValue = val triggerESPRefresh()
@@ -856,7 +892,6 @@ starLabel.Parent = menuButton
 -- ==========================================
 -- HỆ THỐNG PHÁT SÁNG VÀ CHUYỂN MÀU VÒNG LẶP LIÊN TỤC (CHRONO RAINBOW STROKE)
 -- ==========================================
--- Định nghĩa danh sách các sắc độ màu sắc phát sáng Blue Sky chạy tuần hoàn liên tục
 local glowColors = {
 	Color3.fromRGB(135, 206, 250), -- Sky Blue sáng nguyên bản
 	Color3.fromRGB(30, 144, 255),  -- Dodger Blue (Màu xanh biển sâu đậm)
@@ -870,7 +905,6 @@ task.spawn(function()
 	while true do
 		local nextColor = glowColors[colorIndex]
 		
-		-- Tạo Tween chuyển màu mượt mà đồng bộ cho cả viền menu chính và viền nút bấm trong 1 giây
 		local tweenInfo = TweenInfo.new(1.0, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
 		local tweenMenu = TweenService:Create(menuStroke, tweenInfo, {Color = nextColor})
 		local tweenButton = TweenService:Create(btnStroke, tweenInfo, {Color = nextColor})
@@ -878,7 +912,6 @@ task.spawn(function()
 		tweenMenu:Play()
 		tweenButton:Play()
 		
-		-- Đợi tween hoàn tất rồi nhảy sang mã màu tiếp theo trong danh sách tuần hoàn
 		tweenMenu.Completed:Wait()
 		colorIndex = (colorIndex % #glowColors) + 1
 	end
