@@ -1,6 +1,6 @@
-newbie:500:1
-free200coins:200:1
-scriptupdate:500:1
-hayhubcode:300:1
-free2hvip:500:1
-adminvippro:1000:2
+newbie:500:1:true
+free200coins:200:1:true
+scriptupdate:500:1:true
+hayhubcode:300:1:true
+free2hvip:500:1:true
+adminvippro:1000:2:false
