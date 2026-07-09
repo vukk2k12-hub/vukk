@@ -3,7 +3,7 @@
 -- ====================================================================
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BlueSkyCoreGui_FXUpdate"
+ScreenGui.Name = "vuhubadmin"
 ScreenGui.ResetOnSpawn = false
 
 local success, coreGui = pcall(function() return game:GetService("CoreGui") end)
