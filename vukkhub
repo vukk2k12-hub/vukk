@@ -572,7 +572,7 @@ addScriptButton("AdminHub", "https://raw.githubusercontent.com/vukk2k12-hub/game
 addScriptButton("AfkVuHub", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/afkvuhub")
 addScriptButton("MaScript", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/ma")
 addScriptButton("BloxFruit", "https://raw.githubusercontent.com/VTDROBLOX/Animehub/refs/heads/main/Tayhub.txt")
-addScriptButton("BenhVien", "https://airflowscript.com/loader")
+addScriptButton("BenhVien", "https://raw.githubusercontent.com/caomod2077/Script/main/FN_AnimalHospital.lua")
 addScriptButton("on raft", "https://raw.githubusercontent.com/gumanba/Scripts/main/SurviveonaRaft")
 addScriptButton("fling", "https://raw.githubusercontent.com/vukk2k12-hub/gamevukkhub/refs/heads/main/fling")
 addScriptButton("evulusoin", "https://raw.githubusercontent.com/gumanba/Scripts/main/BrainrotEvolution")
