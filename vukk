@@ -1,7 +1,3 @@
--- ====================================================================
--- by vuhub (Optimized Tab 1 Continuous Update) ========================
--- ====================================================================
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "vuhubadmin"
 ScreenGui.ResetOnSpawn = false
