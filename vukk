@@ -16,8 +16,98 @@ local Workspace = game:GetService("Workspace")
 local Teams = game:GetService("Teams")
 local UserInputService = game:GetService("UserInputService")
 local LogService = game:GetService("LogService")
+local StarterGui = game:GetService("StarterGui")
 local localPlayer = Players.LocalPlayer
 
+-- ==========================================
+-- ANTI-KICK SETUP (Từ Script 1)
+-- ==========================================
+getgenv().AntiKickMax = true
+local mt = getrawmetatable(game)
+
+local function showKickBlocked()
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "",
+            Text = "Kick blocked",
+            Duration = 2,
+            Icon = "",
+        })
+    end)
+end
+
+if not getgenv().AntiKickLoaded then
+    getgenv().AntiKickLoaded = true
+    
+    setreadonly(mt, false)
+    
+    local old_namecall = mt.__namecall
+    
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        
+        if self == localPlayer and (method == "Kick" or method:lower():find("kick") or method:lower():find("ban") or method:lower():find("detected")) then
+            showKickBlocked()
+            return
+        end
+        
+        if method == "FireServer" and (tostring(self):find("Kick") or tostring(self):find("Ban") or tostring(self):find("exploit") or tostring(self):find("detected")) then
+            showKickBlocked()
+            return
+        end
+        
+        if method == "Disconnect" and self == localPlayer then
+            showKickBlocked()
+            return
+        end
+        
+        return old_namecall(self, ...)
+    end)
+    
+    if hookfunction then
+        hookfunction(localPlayer.Kick, function() showKickBlocked() end)
+    end
+    
+    local old_error = error
+    error = function(msg, level)
+        local s = tostring(msg):lower()
+        if s:find("kick") or s:find("exploit") or s:find("ban") or s:find("detected") or #tostring(msg) > 1000 then
+            showKickBlocked()
+            return
+        end
+        return old_error(msg, level)
+    end
+    
+    task.spawn(function()
+        while task.wait(0.15) do
+            pcall(function()
+                for _, c in ipairs(getconnections(localPlayer.Idled)) do
+                    c:Disable()
+                end
+            end)
+            
+            pcall(function()
+                setreadonly(mt, false)
+                mt.__namecall = newcclosure(function(self, ...)
+                    local method = getnamecallmethod()
+                    if self == localPlayer and (method:lower():find("kick") or method:lower():find("detected")) then
+                        showKickBlocked()
+                        return
+                    end
+                    return old_namecall(self, ...)
+                end)
+                setreadonly(mt, true)
+            end)
+        end
+    end)
+    
+    setreadonly(mt, true)
+end
+
+-- ==========================================
+-- KHAI BÁO BIẾN HỆ THỐNG GIAO DIỆN (Từ Script 2)
+-- ==========================================
 -- Khai báo hệ màu
 local colorBlue = Color3.fromRGB(0, 0, 255)         
 local colorSky = Color3.fromRGB(135, 206, 250)      
@@ -359,16 +449,13 @@ end
 
 -- ==========================================
 -- LOGIC TÍNH NĂNG TAB 1 (CHÍNH - MAIN)
--- CẬP NHẬT LIÊN TỤC KHÔNG LAG
 -- ==========================================
 
--- Tạo Nút
 createCheatButton("Main", "Speed", "Speed Hack", function(active) end)
 createCheatButton("Main", "Noclip", "Noclip", function(active) end)
 createCheatButton("Main", "JumpPower", "Jump Power", function(active) end)
 createCheatButton("Main", "InfJump", "Inf Jump", function(active) end)
 
--- Giữ nguyên cơ chế X-Ray kích hoạt một lần để không quét Workspace gây lag
 createCheatButton("Main", "XRay", "X-Ray", function(active)
 	if active then
 		for _, part in pairs(Workspace:GetDescendants()) do
@@ -385,13 +472,11 @@ createCheatButton("Main", "XRay", "X-Ray", function(active)
 	end
 end)
 
--- Vòng lặp tối ưu hóa cập nhật liên tục các trạng thái của Nhân vật (Speed, Noclip, JumpPower)
 RunService.Stepped:Connect(function()
 	local character = localPlayer.Character
 	if character then
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 		
-		-- Cập nhật liên tục WalkSpeed khi nhân vật hồi sinh hoặc bị đổi tốc độ gốc
 		if humanoid then
 			if states.Speed then
 				if humanoid.WalkSpeed ~= settingsConfig.SpeedValue then
@@ -399,7 +484,6 @@ RunService.Stepped:Connect(function()
 				end
 			end
 			
-			-- Cập nhật liên tục JumpPower
 			if states.JumpPower then
 				if not humanoid.UseJumpPower then humanoid.UseJumpPower = true end
 				if humanoid.JumpPower ~= settingsConfig.JumpValue then
@@ -408,7 +492,6 @@ RunService.Stepped:Connect(function()
 			end
 		end
 		
-		-- Cập nhật liên tục Noclip mượt mà
 		if states.Noclip then
 			for _, part in pairs(character:GetDescendants()) do
 				if part:IsA("BasePart") and part.CanCollide then 
@@ -419,7 +502,6 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Lắng nghe sự kiện để kích hoạt liên tục nhảy (Infinite Jump)
 UserInputService.JumpRequest:Connect(function()
 	if states.InfJump and localPlayer.Character then
 		local humanoid = localPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -429,7 +511,6 @@ UserInputService.JumpRequest:Connect(function()
 	end
 end)
 
--- Khôi phục giá trị mặc định khi tắt Hack (nhằm đảm bảo tính chính xác)
 task.spawn(function()
 	while true do
 		local character = localPlayer.Character
